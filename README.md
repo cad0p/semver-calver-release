@@ -31,6 +31,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   id-token: write
 
 jobs:
@@ -65,6 +66,34 @@ jobs:
 
 That's it. No other workflow files needed.
 
+## How it works
+
+### Calver releases (automatic)
+
+Every push to `main` that changes code triggers:
+1. Compute next version (e.g. `1.0.0-20260429.0`)
+2. Generate release notes with [git-cliff](https://git-cliff.org)
+3. Tag + GitHub release
+4. Publish to npm (with `next` dist-tag for prereleases)
+5. Update floating tags (`v1`, `v1.0`)
+
+### Base releases (manual, curated)
+
+When you want to bump the base version (e.g. `1.0.0` → `1.1.0`):
+
+1. **Find the draft PR** (e.g. `release/v1.0.0`) — it contains accumulated changelogs since the last base release
+2. **Edit CHANGELOG.md** on that branch to add your preamble/notes
+3. **Bump `package.json`** version to `1.1.0`
+4. **Merge the PR**
+5. The merge triggers `v1.1.0` release using your curated CHANGELOG.md
+
+### Draft changelog PRs
+
+After the first calver release following a base release, a branch like `release/v1.0.0` is maintained with accumulated changelogs. You can:
+- View it to see all changes since the base release
+- Edit it to curate the changelog before a base release
+- Merge it when ready to ship the next base version
+
 ## Actions
 
 ### `validate-version`
@@ -77,7 +106,7 @@ Validates `package.json` version format on pull requests.
 
 ### `release`
 
-Computes the next hybrid version, creates a git tag, publishes a GitHub release, and updates floating tags (`v1`, `v1.0`).
+Computes the next hybrid version, creates a git tag, publishes a GitHub release with git-cliff notes, and maintains draft changelog PRs.
 
 ```yaml
 - id: release
@@ -90,6 +119,13 @@ Computes the next hybrid version, creates a git tag, publishes a GitHub release,
 |--------|-------------|
 | `version` | Computed release version (e.g. `1.0.0-20260429.0`) |
 | `has_changes` | `true` if code changes detected since last tag |
+
+**Permissions needed:**
+
+| Permission | Why |
+|------------|-----|
+| `contents: write` | Create tags and releases |
+| `pull-requests: write` | Create draft changelog PRs (optional, falls back gracefully) |
 
 ### `npm-publish`
 
@@ -126,5 +162,3 @@ Consumer repos should always pin to `@v1`.
 ## License
 
 MIT
-
-
