@@ -79,9 +79,7 @@ runs:
         # Update floating major version tag (e.g. v1) so consumers can use @v1
         MAJOR=$(echo "$VERSION" | grep -oE '^[0-9]+')
         MAJOR_TAG="v$MAJOR"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git config user.name "github-actions[bot]"
-        git tag -fa "$MAJOR_TAG" -m "Update $MAJOR_TAG to $TAG"
+        git tag -f "$MAJOR_TAG"
         git push origin "$MAJOR_TAG" --force
 
         gh release create "$TAG" \
