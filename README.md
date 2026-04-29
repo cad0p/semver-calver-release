@@ -168,3 +168,4 @@ Use `@v1` to track the latest v1.x release. For immutable references, pin to a s
 ## License
 
 MIT
+# Release trigger
