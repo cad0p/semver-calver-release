@@ -103,14 +103,14 @@ runs:
           echo "Calver release — auto-updating CHANGELOG.md"
           cat /tmp/notes.md >> CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]"
-          git push origin HEAD:main
+          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
+          git push origin HEAD:main || echo "::warning::Could not push CHANGELOG.md to main (branch protection?)"
         elif ! git log -1 --name-only --pretty=format: | grep -q '^package\.json$'; then
           echo "Base release without package.json change — auto-updating CHANGELOG.md"
           cat /tmp/notes.md >> CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]"
-          git push origin HEAD:main
+          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
+          git push origin HEAD:main || echo "::warning::Could not push CHANGELOG.md to main (branch protection?)"
         else
           echo "Base release with package.json change — trusting user's CHANGELOG.md"
         fi
