@@ -78,9 +78,6 @@ runs:
 
         # Generate notes from conventional commits since last tag
         {
-          echo "## [$VERSION](https://github.com/$GITHUB_REPOSITORY/compare/$LAST_TAG...$TAG) ($(date -u +%Y-%m-%d))"
-          echo ""
-
           FEATS=$(git log "$RANGE" --grep='^feat' --pretty='format:- %s (%h)' || true)
           FIXES=$(git log "$RANGE" --grep='^fix' --pretty='format:- %s (%h)' || true)
           DOCS=$(git log "$RANGE" --grep='^docs' --pretty='format:- %s (%h)' || true)
@@ -93,6 +90,44 @@ runs:
           [ -n "$BREAKING" ] && { echo "### BREAKING CHANGES"; echo "$BREAKING"; echo ""; }
           [ -n "$OTHER" ] && { echo "### Other Changes"; echo "$OTHER"; echo ""; }
         } > /tmp/notes.md
+
+    - name: Tag and release
+      if: steps.changes.outputs.has_changes == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        TAG="v$VERSION"
+
+        # Tag the triggering commit (before any CHANGELOG.md commit)
+        git tag "$TAG"
+        git push origin "$TAG"
+
+        # Update floating major version tag (e.g. v1) so consumers can use @v1
+        MAJOR=$(echo "$VERSION" | grep -oE '^[0-9]+')
+        MAJOR_TAG="v$MAJOR"
+        git tag -f "$MAJOR_TAG"
+        git push origin "$MAJOR_TAG" --force
+
+        # Update floating major.minor version tag (e.g. v1.0) so consumers can use @v1.0
+        MAJOR_MINOR=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
+        MAJOR_MINOR_TAG="v$MAJOR_MINOR"
+        git tag -f "$MAJOR_MINOR_TAG"
+        git push origin "$MAJOR_MINOR_TAG" --force
+
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --notes-file /tmp/notes.md \
+          --latest
+
+    - name: Update CHANGELOG.md
+      if: steps.changes.outputs.has_changes == 'true'
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        TAG="v$VERSION"
+        IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
         # For calver releases: auto-append to CHANGELOG.md
         # For base releases: only auto-append if user did NOT manually edit package.json
@@ -114,32 +149,3 @@ runs:
         else
           echo "Base release with package.json change — trusting user's CHANGELOG.md"
         fi
-
-    - name: Tag and release
-      if: steps.changes.outputs.has_changes == 'true'
-      shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        TAG="v$VERSION"
-
-        git tag "$TAG"
-        git push origin "$TAG"
-
-        # Update floating major version tag (e.g. v1) so consumers can use @v1
-        MAJOR=$(echo "$VERSION" | grep -oE '^[0-9]+')
-        MAJOR_TAG="v$MAJOR"
-        git tag -f "$MAJOR_TAG"
-        git push origin "$MAJOR_TAG" --force
-
-        # Update floating major.minor version tag (e.g. v1.0) so consumers can use @v1.0
-        MAJOR_MINOR=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
-        MAJOR_MINOR_TAG="v$MAJOR_MINOR"
-        git tag -f "$MAJOR_MINOR_TAG"
-        git push origin "$MAJOR_MINOR_TAG" --force
-
-        gh release create "$TAG" \
-          --title "$TAG" \
-          --notes-file /tmp/notes.md \
-          --latest
