@@ -1,0 +1,82 @@
+name: 'SemVer+CalVer Release'
+description: 'Compute hybrid version, tag, and create GitHub release'
+
+outputs:
+  version:
+    description: 'The computed release version'
+    value: ${{ steps.version.outputs.version }}
+  has_changes:
+    description: 'Whether code changes were detected since the last tag'
+    value: ${{ steps.changes.outputs.has_changes }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Check for code changes since last tag
+      id: changes
+      shell: bash
+      run: |
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+        else
+          CHANGED=$(git diff --name-only "$LAST_TAG" HEAD | grep -v -E '^(README\.md|CHANGELOG\.md|\.github/|docs/)' || true)
+          if [ -n "$CHANGED" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+        fi
+
+    - name: Compute hybrid version
+      id: version
+      if: steps.changes.outputs.has_changes == 'true'
+      shell: bash
+      run: |
+        CURRENT=$(jq -r '.version' package.json)
+        BASE=$(echo "$CURRENT" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
+        MAJOR=$(echo "$BASE" | cut -d. -f1)
+        MINOR=$(echo "$BASE" | cut -d. -f2)
+        PATCH=$(echo "$BASE" | cut -d. -f3)
+        TODAY=$(date -u +%Y%m%d)
+
+        BASE_VERSION="$MAJOR.$MINOR.$PATCH"
+
+        if ! git tag -l "v$BASE_VERSION" | grep -q .; then
+          VERSION="$BASE_VERSION"
+        else
+          CANDIDATE="$BASE_VERSION-$TODAY"
+          if git tag -l "v$CANDIDATE.0" | grep -q .; then
+            SUFFIX=1
+            while git tag -l "v$CANDIDATE.$SUFFIX" | grep -q .; do
+              SUFFIX=$((SUFFIX + 1))
+            done
+            VERSION="$CANDIDATE.$SUFFIX"
+          else
+            VERSION="$CANDIDATE.0"
+          fi
+        fi
+
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Computed version: $VERSION"
+
+    - name: Tag and release
+      if: steps.changes.outputs.has_changes == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        TAG="v$VERSION"
+
+        git tag "$TAG"
+        git push origin "$TAG"
+
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --generate-notes \
+          --latest

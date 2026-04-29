@@ -1,0 +1,49 @@
+name: 'Publish to npm'
+description: 'Publish to npm with hybrid SemVer+CalVer versioning and smart skip'
+
+inputs:
+  tag:
+    description: 'Git tag to publish (e.g. v1.0.0 or v1.0.0-20260429.0)'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        registry-url: https://registry.npmjs.org
+
+    - name: Compute version from tag
+      id: version
+      shell: bash
+      run: |
+        TAG="${{ inputs.tag || github.event.release.tag_name }}"
+        VERSION="${TAG#v}"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Publishing version: $VERSION"
+        jq --indent 2 --arg v "$VERSION" '.version = $v' package.json > package.json.tmp
+        mv package.json.tmp package.json
+
+    - run: npm install
+      shell: bash
+
+    - name: Publish to npm
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        PACKAGE=$(jq -r '.name' package.json)
+
+        if npm view "$PACKAGE@$VERSION" version &>/dev/null; then
+          echo "::notice::Version $VERSION already published to npm, skipping"
+          exit 0
+        fi
+
+        if echo "$VERSION" | grep -q '-'; then
+          npm publish --access public --tag next
+        else
+          npm publish --access public
+        fi

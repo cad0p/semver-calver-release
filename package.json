@@ -1,0 +1,24 @@
+{
+  "name": "semver-calver-release",
+  "version": "1.0.0",
+  "description": "Reusable GitHub Actions for hybrid SemVer+CalVer versioning and npm publishing.",
+  "keywords": [
+    "github-actions",
+    "semver",
+    "calver",
+    "versioning",
+    "release",
+    "npm",
+    "publish"
+  ],
+  "license": "MIT",
+  "author": "cad0p",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cad0p/semver-calver-release.git"
+  },
+  "files": [
+    ".github/workflows/",
+    "README.md"
+  ]
+}
