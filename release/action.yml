@@ -64,11 +64,6 @@ runs:
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         echo "Computed version: $VERSION"
 
-    - uses: actions/setup-node@v4
-      if: steps.changes.outputs.has_changes == 'true'
-      with:
-        node-version: lts/*
-
     - name: Generate changelog notes
       if: steps.changes.outputs.has_changes == 'true'
       id: changelog
@@ -77,24 +72,45 @@ runs:
         VERSION="${{ steps.version.outputs.version }}"
         TAG="v$VERSION"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        RANGE="${LAST_TAG}..HEAD"
+        [ -z "$LAST_TAG" ] && RANGE="HEAD"
 
-        # Generate notes since last tag
-        npx --yes conventional-changelog-cli -p angular -o /tmp/notes.md || true
+        # Generate notes from conventional commits since last tag
+        {
+          echo "## [$VERSION](https://github.com/$GITHUB_REPOSITORY/compare/$LAST_TAG...$TAG) ($(date -u +%Y-%m-%d))"
+          echo ""
+
+          FEATS=$(git log "$RANGE" --grep='^feat' --pretty='format:- %s (%h)' || true)
+          FIXES=$(git log "$RANGE" --grep='^fix' --pretty='format:- %s (%h)' || true)
+          DOCS=$(git log "$RANGE" --grep='^docs' --pretty='format:- %s (%h)' || true)
+          BREAKING=$(git log "$RANGE" --grep='BREAKING CHANGE' --pretty='format:- %s (%h)' || true)
+          OTHER=$(git log "$RANGE" --grep='^\(feat\|fix\|docs\|chore\|test\|style\|refactor\)' --invert-grep --pretty='format:- %s (%h)' || true)
+
+          [ -n "$FEATS" ] && { echo "### Features"; echo "$FEATS"; echo ""; }
+          [ -n "$FIXES" ] && { echo "### Bug Fixes"; echo "$FIXES"; echo ""; }
+          [ -n "$DOCS" ] && { echo "### Documentation"; echo "$DOCS"; echo ""; }
+          [ -n "$BREAKING" ] && { echo "### BREAKING CHANGES"; echo "$BREAKING"; echo ""; }
+          [ -n "$OTHER" ] && { echo "### Other Changes"; echo "$OTHER"; echo ""; }
+        } > /tmp/notes.md
 
         # For calver releases: auto-append to CHANGELOG.md
         # For base releases: only auto-append if user did NOT manually edit package.json
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
         if [ "$IS_CALVER" = "true" ]; then
           echo "Calver release — auto-updating CHANGELOG.md"
           cat /tmp/notes.md >> CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
-          git push origin HEAD:main || true
+          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]"
+          git push origin HEAD:main
         elif ! git log -1 --name-only --pretty=format: | grep -q '^package\.json$'; then
           echo "Base release without package.json change — auto-updating CHANGELOG.md"
           cat /tmp/notes.md >> CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
-          git push origin HEAD:main || true
+          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]"
+          git push origin HEAD:main
         else
           echo "Base release with package.json change — trusting user's CHANGELOG.md"
         fi
@@ -123,15 +139,7 @@ runs:
         git tag -f "$MAJOR_MINOR_TAG"
         git push origin "$MAJOR_MINOR_TAG" --force
 
-        # Use conventional-changelog notes if available, otherwise fallback to GitHub auto-generated
-        if [ -f /tmp/notes.md ] && [ -s /tmp/notes.md ]; then
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --notes-file /tmp/notes.md \
-            --latest
-        else
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --generate-notes \
-            --latest
-        fi
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --notes-file /tmp/notes.md \
+          --latest
