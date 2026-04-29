@@ -172,5 +172,6 @@ runs:
             --head "$BRANCH" \
             --base main \
             --title "docs: changelog for $BASE_TAG" \
-            --body "Accumulated changes since $BASE_TAG. Edit CHANGELOG.md and bump package.json when ready for the next base release."
+            --body "Accumulated changes since $BASE_TAG. Edit CHANGELOG.md and bump package.json when ready for the next base release." \
+            || echo "::warning::Could not create PR (needs pull-requests: write permission)"
         fi
