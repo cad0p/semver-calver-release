@@ -1,5 +1,5 @@
 name: 'SemVer+CalVer Release'
-description: 'Compute hybrid version, tag, and create GitHub release'
+description: 'Compute hybrid version, tag, create GitHub release, and manage CHANGELOG.md'
 
 outputs:
   version:
@@ -64,6 +64,41 @@ runs:
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         echo "Computed version: $VERSION"
 
+    - uses: actions/setup-node@v4
+      if: steps.changes.outputs.has_changes == 'true'
+      with:
+        node-version: lts/*
+
+    - name: Generate changelog notes
+      if: steps.changes.outputs.has_changes == 'true'
+      id: changelog
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        TAG="v$VERSION"
+        IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
+
+        # Generate notes since last tag
+        npx --yes conventional-changelog-cli -p angular -o /tmp/notes.md || true
+
+        # For calver releases: auto-append to CHANGELOG.md
+        # For base releases: only auto-append if user did NOT manually edit package.json
+        if [ "$IS_CALVER" = "true" ]; then
+          echo "Calver release — auto-updating CHANGELOG.md"
+          cat /tmp/notes.md >> CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
+          git push origin HEAD:main || true
+        elif ! git log -1 --name-only --pretty=format: | grep -q '^package\.json$'; then
+          echo "Base release without package.json change — auto-updating CHANGELOG.md"
+          cat /tmp/notes.md >> CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
+          git push origin HEAD:main || true
+        else
+          echo "Base release with package.json change — trusting user's CHANGELOG.md"
+        fi
+
     - name: Tag and release
       if: steps.changes.outputs.has_changes == 'true'
       shell: bash
@@ -88,7 +123,15 @@ runs:
         git tag -f "$MAJOR_MINOR_TAG"
         git push origin "$MAJOR_MINOR_TAG" --force
 
-        gh release create "$TAG" \
-          --title "$TAG" \
-          --generate-notes \
-          --latest
+        # Use conventional-changelog notes if available, otherwise fallback to GitHub auto-generated
+        if [ -f /tmp/notes.md ] && [ -s /tmp/notes.md ]; then
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file /tmp/notes.md \
+            --latest
+        else
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --latest
+        fi
