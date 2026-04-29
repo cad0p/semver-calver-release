@@ -1,5 +1,5 @@
 name: 'SemVer+CalVer Release'
-description: 'Compute hybrid version, tag, create GitHub release, and manage CHANGELOG.md'
+description: 'Compute hybrid version, tag, create GitHub release, and maintain draft changelog PR'
 
 outputs:
   version:
@@ -62,7 +62,32 @@ runs:
         fi
 
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
         echo "Computed version: $VERSION"
+
+    - name: Install git-cliff
+      if: steps.changes.outputs.has_changes == 'true'
+      shell: bash
+      run: npm install -g git-cliff
+
+    - name: Generate release notes
+      if: steps.changes.outputs.has_changes == 'true'
+      id: notes
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        TAG="v$VERSION"
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        # Generate notes for this specific release
+        if [ -n "$LAST_TAG" ]; then
+          git-cliff --from "$LAST_TAG" --to HEAD --strip header --output /tmp/notes.md
+        else
+          git-cliff --output /tmp/notes.md
+        fi
+
+        echo "Notes generated:"
+        cat /tmp/notes.md
 
     - name: Tag and release
       if: steps.changes.outputs.has_changes == 'true'
@@ -72,56 +97,80 @@ runs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         TAG="v$VERSION"
+        IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
         git tag "$TAG"
         git push origin "$TAG"
 
-        # Update floating major version tag (e.g. v1) so consumers can use @v1
+        # Update floating major version tag
         MAJOR=$(echo "$VERSION" | grep -oE '^[0-9]+')
-        MAJOR_TAG="v$MAJOR"
-        git tag -f "$MAJOR_TAG"
-        git push origin "$MAJOR_TAG" --force
+        git tag -f "v$MAJOR"
+        git push origin "v$MAJOR" --force
 
-        # Update floating major.minor version tag (e.g. v1.0) so consumers can use @v1.0
+        # Update floating major.minor version tag
         MAJOR_MINOR=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
-        MAJOR_MINOR_TAG="v$MAJOR_MINOR"
-        git tag -f "$MAJOR_MINOR_TAG"
-        git push origin "$MAJOR_MINOR_TAG" --force
+        git tag -f "v$MAJOR_MINOR"
+        git push origin "v$MAJOR_MINOR" --force
 
-        gh release create "$TAG" \
-          --title "$TAG" \
-          --generate-notes \
-          --latest
+        # For base releases: use curated CHANGELOG.md if available
+        # For calver: use git-cliff generated notes
+        if [ "$IS_CALVER" = "true" ] || [ ! -f CHANGELOG.md ]; then
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file /tmp/notes.md \
+            --latest
+        else
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file CHANGELOG.md \
+            --latest
+        fi
 
-    - name: Update CHANGELOG.md
+    - name: Update draft changelog PR
       if: steps.changes.outputs.has_changes == 'true'
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         VERSION="${{ steps.version.outputs.version }}"
-        TAG="v$VERSION"
+        BASE_VERSION="${{ steps.version.outputs.base_version }}"
+        BASE_TAG="v$BASE_VERSION"
+        BRANCH="release/$BASE_TAG"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
+
+        # Only maintain draft PR for calver releases (between base releases)
+        if [ "$IS_CALVER" != "true" ]; then
+          echo "Base release — no draft PR needed"
+          exit 0
+        fi
 
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git config user.name "github-actions[bot]"
 
-        if [ "$IS_CALVER" = "true" ]; then
-          echo "Calver release — auto-updating CHANGELOG.md"
-          echo "## $TAG" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "See [release notes](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)." >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
-          git push origin HEAD:main || echo "::warning::Could not push CHANGELOG.md to main (branch protection?)"
-        elif ! git log -1 --name-only --pretty=format: | grep -q '^package\.json$'; then
-          echo "Base release without package.json change — auto-updating CHANGELOG.md"
-          echo "## $TAG" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          echo "See [release notes](https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG)." >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          git add CHANGELOG.md
-          git commit -m "docs: update CHANGELOG.md for $TAG [skip ci]" || true
-          git push origin HEAD:main || echo "::warning::Could not push CHANGELOG.md to main (branch protection?)"
+        # Generate full accumulated changelog since base version
+        git-cliff --from "$BASE_TAG" --to HEAD --output CHANGELOG.md
+
+        # Check if branch exists on remote
+        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+          echo "Updating existing draft PR branch: $BRANCH"
+          git fetch origin "$BRANCH"
+          git checkout -b "$BRANCH" "origin/$BRANCH" || git checkout "$BRANCH"
+          git merge -X theirs HEAD --no-edit || true
         else
-          echo "Base release with package.json change — trusting user's CHANGELOG.md"
+          echo "Creating new draft PR branch: $BRANCH"
+          git checkout -b "$BRANCH"
+        fi
+
+        git add CHANGELOG.md
+        git commit -m "docs: update CHANGELOG.md for upcoming $BASE_TAG release" || true
+        git push origin "$BRANCH" --force
+
+        # Create PR if it doesn't exist
+        PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
+        if [ "$PR_EXISTS" = "0" ]; then
+          gh pr create \
+            --head "$BRANCH" \
+            --base main \
+            --title "docs: changelog for $BASE_TAG" \
+            --body "Accumulated changes since $BASE_TAG. Edit CHANGELOG.md and bump package.json when ready for the next base release."
         fi
