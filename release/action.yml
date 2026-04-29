@@ -154,8 +154,8 @@ runs:
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
           echo "Updating existing draft PR branch: $BRANCH"
           git fetch origin "$BRANCH"
-          git checkout -b "$BRANCH" "origin/$BRANCH" || git checkout "$BRANCH"
-          git merge -X theirs HEAD --no-edit || true
+          git checkout -f "$BRANCH" || git checkout -b "$BRANCH" origin/$BRANCH
+          git merge -X theirs origin/main --no-edit || true
         else
           echo "Creating new draft PR branch: $BRANCH"
           git checkout -b "$BRANCH"
