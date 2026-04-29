@@ -94,6 +94,8 @@ After the first calver release following a base release, a branch like `release/
 - Edit it to curate the changelog before a base release
 - Merge it when ready to ship the next base version
 
+**Note:** Auto-creating PRs requires enabling "Allow GitHub Actions to create and approve pull requests" in your repo settings (Settings → Actions → General). Without this, the branch is still maintained automatically — you'll just need to create the PR manually.
+
 ## Actions
 
 ### `validate-version`
