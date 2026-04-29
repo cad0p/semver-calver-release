@@ -81,9 +81,9 @@ runs:
 
         # Generate notes for this specific release
         if [ -n "$LAST_TAG" ]; then
-          git-cliff --from "$LAST_TAG" --to HEAD --strip header --output /tmp/notes.md
+          git-cliff "$LAST_TAG..HEAD" --strip header --output /tmp/notes.md
         else
-          git-cliff --output /tmp/notes.md
+          git-cliff --strip header --output /tmp/notes.md
         fi
 
         echo "Notes generated:"
@@ -148,7 +148,7 @@ runs:
         git config user.name "github-actions[bot]"
 
         # Generate full accumulated changelog since base version
-        git-cliff --from "$BASE_TAG" --to HEAD --output CHANGELOG.md
+        git-cliff "$BASE_TAG..HEAD" --output CHANGELOG.md
 
         # Check if branch exists on remote
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
