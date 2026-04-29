@@ -15,110 +15,12 @@ Composite GitHub Actions for **hybrid SemVer + CalVer versioning** and npm publi
 - If the base version was already released, appends **CalVer suffix** (`-YYYYMMDD.N`)
 - Auto-increments `N` for multiple releases on the same day
 
-## Actions
+## Usage
 
-### `validate-version`
-
-Validates `package.json` version format on pull requests.
+Add a single workflow file to your repo:
 
 ```yaml
-name: Validate Version
-on:
-  pull_request:
-    branches: [main]
-jobs:
-  check-version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: cad0p/semver-calver-release/validate-version@v1
-```
-
-### `release`
-
-Computes the next hybrid version, creates a git tag, and publishes a GitHub release.
-
-```yaml
-name: Auto Release
-on:
-  push:
-    branches: [main]
-permissions:
-  contents: write
-  id-token: write
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.release.outputs.version }}
-      has_changes: ${{ steps.release.outputs.has_changes }}
-    steps:
-      - id: release
-        uses: cad0p/semver-calver-release/release@v1
-
-  publish:
-    needs: release
-    if: needs.release.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: cad0p/semver-calver-release/npm-publish@v1
-        with:
-          tag: v${{ needs.release.outputs.version }}
-```
-
-**Outputs:**
-
-| Output | Description |
-|--------|-------------|
-| `version` | Computed release version |
-| `has_changes` | `true` if code changes detected since last tag |
-
-### `npm-publish`
-
-Publishes to npm with **smart skip** — if the version already exists on npm, the action exits cleanly instead of failing. Uses `next` dist-tag for prerelease versions (containing `-`).
-
-```yaml
-name: Publish to npm
-on:
-  release:
-    types: [published]
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: cad0p/semver-calver-release/npm-publish@v1
-        with:
-          tag: ${{ github.event.release.tag_name }}
-```
-
-**Inputs:**
-
-| Input | Required | Description |
-|-------|----------|-------------|
-| `tag` | No | Git tag to publish (defaults to `github.event.release.tag_name`) |
-
-## Self-releasing this action
-
-For the `semver-calver-release` repo itself, use `@main` to avoid the chicken-and-egg problem with `@v1`:
-
-```yaml
-jobs:
-  release:
-    steps:
-      - id: release
-        uses: cad0p/semver-calver-release/release@main
-```
-
-Consumer repos should still pin to `@v1` for stability.
-
-## Full Example
-
-```yaml
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -158,12 +60,68 @@ jobs:
     steps:
       - uses: cad0p/semver-calver-release/npm-publish@v1
         with:
-          tag: ${{ needs.release.outputs.tag }}
+          tag: v${{ needs.release.outputs.version }}
 ```
+
+That's it. No other workflow files needed.
+
+## Actions
+
+### `validate-version`
+
+Validates `package.json` version format on pull requests.
+
+```yaml
+- uses: cad0p/semver-calver-release/validate-version@v1
+```
+
+### `release`
+
+Computes the next hybrid version, creates a git tag, publishes a GitHub release, and updates floating tags (`v1`, `v1.0`).
+
+```yaml
+- id: release
+  uses: cad0p/semver-calver-release/release@v1
+```
+
+**Outputs:**
+
+| Output | Description |
+|--------|-------------|
+| `version` | Computed release version (e.g. `1.0.0-20260429.0`) |
+| `has_changes` | `true` if code changes detected since last tag |
+
+### `npm-publish`
+
+Publishes to npm with **smart skip** — if the version already exists, the action exits cleanly instead of failing. Uses `next` dist-tag for prerelease versions (containing `-`).
+
+```yaml
+- uses: cad0p/semver-calver-release/npm-publish@v1
+  with:
+    tag: v${{ needs.release.outputs.version }}
+```
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `tag` | No | Git tag to publish (defaults to `github.event.release.tag_name`) |
 
 ## Pinning
 
-Use `@v1` to track the latest v1.x release. For immutable references, pin to a specific tag like `@v1.0.0`.
+| Ref | Meaning |
+|-----|---------|
+| `@v1` | Latest v1.x.x — recommended for CI |
+| `@v1.0` | Latest v1.0.x — minor version locked |
+| `@v1.0.0` or `@v1.0.0-20260429.0` | Exact release — immutable |
+
+## Self-releasing this action
+
+For the `semver-calver-release` repo itself, use `@main` to avoid the chicken-and-egg problem:
+
+```yaml
+- uses: cad0p/semver-calver-release/release@main
+```
+
+Consumer repos should always pin to `@v1`.
 
 ## License
 
