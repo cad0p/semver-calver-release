@@ -147,13 +147,46 @@ runs:
         fi
 
         REPO="${{ github.repository }}"
+        MAIN_SHA=$(git rev-parse origin/main)
 
         # Determine parent: branch tip if exists, otherwise main
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
-          PARENT_SHA=$(git rev-parse "origin/$BRANCH")
-          echo "Accumulating on existing branch $BRANCH (tip: $PARENT_SHA)"
+          BRANCH_SHA=$(git rev-parse "origin/$BRANCH")
+          echo "Branch $BRANCH exists at $BRANCH_SHA"
+
+          # Check if branch is behind main
+          MERGE_BASE=$(git merge-base "$BRANCH_SHA" "$MAIN_SHA")
+          if [ "$MERGE_BASE" != "$MAIN_SHA" ]; then
+            echo "Branch is behind main — checking for conflicts"
+
+            # Get files changed on main since branch diverged
+            MAIN_FILES=$(git diff --name-only "$MERGE_BASE" "$MAIN_SHA" | sort)
+            # Get files changed on branch since divergence
+            BRANCH_FILES=$(git diff --name-only "$MERGE_BASE" "$BRANCH_SHA" | sort)
+
+            # Check for overlapping changes
+            CONFLICTS=$(comm -12 <(echo "$MAIN_FILES") <(echo "$BRANCH_FILES"))
+            if [ -n "$CONFLICTS" ]; then
+              echo "::error::Merge conflict detected on files: $CONFLICTS"
+              echo "::error::Manually rebase $BRANCH on main and resolve conflicts before merging"
+              # Continue without rebasing — user must fix manually
+              PARENT_SHA=$BRANCH_SHA
+            else
+              echo "No conflicts — safe to rebase on main"
+              # Safe rebase: replay branch tree on main (no overlapping changes)
+              REBASED_TREE=$(git rev-parse "$BRANCH_SHA^{tree}")
+              cat > /tmp/rebase.json << EOF
+        {"message": "docs: rebase changelog branch on main", "tree": "$REBASED_TREE", "parents": ["$MAIN_SHA"]}
+        EOF
+              REBASED_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/rebase.json --jq '.sha')
+              gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH -f sha="$REBASED_SHA" -f force=true
+              PARENT_SHA=$REBASED_SHA
+            fi
+          else
+            PARENT_SHA=$BRANCH_SHA
+          fi
         else
-          PARENT_SHA=$(git rev-parse origin/main)
+          PARENT_SHA=$MAIN_SHA
           echo "Creating new branch $BRANCH from main ($PARENT_SHA)"
         fi
 
