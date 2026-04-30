@@ -175,10 +175,16 @@ runs:
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
         TODAY=$(date -u +%Y-%m-%d)
 
-        # Extract first user-editable section from existing branch CHANGELOG.md
+        # Extract user section from existing [calver-released] draft on the branch.
+        # If no draft exists yet (first calver after base release), start fresh.
         USER_SECTION=""
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/existing_changelog.md 2>/dev/null; then
-          USER_SECTION=$(awk '/<!-- USER-EDITABLE SECTION START -->/{found=1} found{print; if(/USER-EDITABLE SECTION END/) exit}' /tmp/existing_changelog.md)
+          # Look for [calver-released] heading, then extract its user section
+          USER_SECTION=$(awk '
+            /## \[calver-released\]/ { in_draft=1 }
+            in_draft && /<!-- USER-EDITABLE SECTION START -->/ { found=1 }
+            found { print; if(/USER-EDITABLE SECTION END/) exit }
+          ' /tmp/existing_changelog.md)
         fi
 
         if [ -z "$USER_SECTION" ]; then
@@ -199,24 +205,23 @@ runs:
         # Generate unified changelog since base version (calver tags ignored)
         git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
 
-        # Build the new top section with versioned heading and user section
+        # Build the new top section with [calver-released] heading and user section
         {
-          echo "## [$CURRENT_VERSION] - $TODAY"
+          echo "## [calver-released]"
           echo ""
           echo "$USER_SECTION"
           echo ""
           cat /tmp/new_section.md
         } > /tmp/top_section.md
 
-        # Get existing changelog body (skip header and old draft section for this version)
+        # Get existing changelog body (skip header and old [calver-released] draft section)
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
-          # First skip the header (lines before first ## [), then skip the draft section for CURRENT_VERSION
-          # Use index() for literal string match (ver contains regex chars like [])
-          awk -v ver="## [$CURRENT_VERSION]" '
+          # First skip the header (lines before first ## [), then skip the [calver-released] draft section
+          awk '
             BEGIN { in_header=1 }
             /^## \[/ { in_header=0 }
             in_header { next }
-            index($0, ver) > 0 { skip=1; next }
+            /## \[calver-released\]/ { skip=1; next }
             skip && /^## \[/ { skip=0 }
             !skip { print }
           ' /tmp/old_changelog.md > /tmp/old_body.md
@@ -300,7 +305,7 @@ runs:
         # Create draft PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
         if [ "$PR_EXISTS" = "0" ]; then
-          PR_BODY=$(printf 'Accumulated changes since %s.\n\nEdit the section between `<!-- USER-EDITABLE SECTION -->` markers in CHANGELOG.md and bump package.json when ready for the next base release.' "$BASE_TAG")
+          PR_BODY=$(printf 'Accumulated changes since %s.\n\nEdit the `[calver-released]` section in CHANGELOG.md and bump package.json when ready for the next base release.' "$BASE_TAG")
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
