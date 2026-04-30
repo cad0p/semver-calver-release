@@ -40,6 +40,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Auto-manage draft heading, start fresh on base bump, remove heading validation ([#113](https://github.com/cad0p/semver-calver-release/pull/113))
 
+- Run release action on release/* branches, skip tag/release there ([#114](https://github.com/cad0p/semver-calver-release/pull/114))
+
 
 ## [1.1.0] - 2026-04-30
 
