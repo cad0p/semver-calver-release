@@ -272,11 +272,11 @@ runs:
 
         # Historical body comes from main (source of truth for finalized sections)
         if git show origin/main:CHANGELOG.md >/tmp/main_changelog.md 2>/dev/null; then
-          # Skip header and first section heading from main
+          # Skip header lines, keep all ## [ headings
           awk '
             BEGIN { in_header = 1 }
             /^## \[/ {
-              if (in_header) { in_header = 0; next }
+              if (in_header) { in_header = 0 }
             }
             !in_header { print }
           ' /tmp/main_changelog.md > /tmp/historical_body.md
