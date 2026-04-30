@@ -118,7 +118,7 @@ After the first calver release following a base release, a branch like `release/
 **How it works:**
 - The draft heading uses the current `package.json` version (e.g. `## [1.1.3]`) when bumped, or `[calver-released]` when still accumulating
 - Historical sections (`[1.1.2]`, `[1.1.0]`, etc.) come from `main` — the branch is rebuilt from `origin/main` on each update
-- User-editable sections are preserved during calver accumulation, but reset to empty when the base version is bumped
+- User-editable sections are preserved across heading changes. A fresh empty section only appears when the branch is first created from main
 
 You can:
 - View it to see all changes since the base release
