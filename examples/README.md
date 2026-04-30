@@ -8,8 +8,7 @@ Single workflow: auto-release on every push to `main`.
 
 Best for:
 - Solo projects
-- Teams that always auto-release (no curated changelogs)
-- CI-only repos without npm publishing
+- Projects that always auto-release and don't need curated changelogs
 
 ## [`basic-npm-package`](./basic-npm-package)
 
