@@ -1,0 +1,22 @@
+[changelog]
+header = ""
+trim = true
+
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits %}
+- {% if commit.scope %}*({{ commit.scope }})* {% endif %}{{ commit.message | upper_first }}
+{% endfor %}
+{% endfor %}
+"""
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+# Convert #123 in commit messages to markdown link placeholder
+commit_preprocessors = [
+    { pattern = '(^|[\\s\\(])#([0-9]+)', replace = "${1}[#${2}](<REPO>/pull/${2})" }
+]
