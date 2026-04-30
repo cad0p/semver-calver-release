@@ -1,6 +1,12 @@
 name: 'SemVer+CalVer Release'
 description: 'Compute hybrid version, tag, create GitHub release, and maintain draft changelog PR'
 
+inputs:
+  skip_release:
+    description: 'Skip tag and release, only update draft PR'
+    required: false
+    default: 'false'
+
 outputs:
   version:
     description: 'The computed release version'
@@ -104,7 +110,7 @@ runs:
         cat /tmp/notes.md
 
     - name: Tag and release
-      if: steps.changes.outputs.has_changes == 'true'
+      if: steps.changes.outputs.has_changes == 'true' && inputs.skip_release != 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
@@ -141,7 +147,7 @@ runs:
         fi
 
     - name: Update draft changelog PR
-      if: steps.changes.outputs.has_changes == 'true'
+      if: steps.changes.outputs.has_changes == 'true' || inputs.skip_release == 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
