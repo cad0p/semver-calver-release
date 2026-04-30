@@ -226,18 +226,22 @@ runs:
           DRAFT_HEADING="## [calver-released]"
         fi
 
-        # Always preserve existing user section from top draft
-        USER_SECTION=""
-        if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/existing_changelog.md 2>/dev/null; then
-          # Extract user section from the first ## [ section (top draft)
-          USER_SECTION=$(awk '
-            /^## \[/ { section++ }
-            section == 1 && /<!-- USER-EDITABLE SECTION START -->/ { found=1 }
-            section == 1 && found { print; if(/USER-EDITABLE SECTION END/) exit }
-          ' /tmp/existing_changelog.md)
-        fi
-        if [ -z "$USER_SECTION" ]; then
+        # Base bump: start fresh. Calver: preserve existing user section.
+        if [ "$CURRENT_VERSION" != "$MAIN_BASE" ]; then
           USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. -->\n<!-- USER-EDITABLE SECTION END -->'
+        else
+          USER_SECTION=""
+          if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/existing_changelog.md 2>/dev/null; then
+            # Extract user section from the first ## [ section (top draft)
+            USER_SECTION=$(awk '
+              /^## \[/ { section++ }
+              section == 1 && /<!-- USER-EDITABLE SECTION START -->/ { found=1 }
+              section == 1 && found { print; if(/USER-EDITABLE SECTION END/) exit }
+            ' /tmp/existing_changelog.md)
+          fi
+          if [ -z "$USER_SECTION" ]; then
+            USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. -->\n<!-- USER-EDITABLE SECTION END -->'
+          fi
         fi
 
         # Use repo's cliff.toml if present; otherwise fall back to the action's default
