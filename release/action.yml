@@ -157,20 +157,10 @@ runs:
           echo "Creating new branch $BRANCH from main ($PARENT_SHA)"
         fi
 
-        # Create git-cliff config that ignores calver tags for a unified changelog
-        cat > /tmp/cliff.toml << 'EOF'
-        [changelog]
-        header = "# Changelog\n\nAll notable changes to this project will be documented in this file.\n"
-        trim = true
-
-        [git]
-        conventional_commits = true
-        filter_unconventional = true
-        tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
-        EOF
-
-        # Generate unified changelog since base version (calver tags ignored)
-        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --output /tmp/auto_changelog.md
+        # Read current package.json version from the branch (user may have bumped it)
+        git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
+        CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
+        TODAY=$(date -u +%Y-%m-%d)
 
         # Extract user-editable section from existing branch CHANGELOG.md
         USER_SECTION=""
@@ -182,19 +172,38 @@ runs:
           USER_SECTION="<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->"
         fi
 
-        # Read current package.json version from the branch (user may have bumped it)
-        git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
-        CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
-        TODAY=$(date -u +%Y-%m-%d)
+        # Generate only the NEW top section (changes since base tag, no header)
+        git-cliff "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
 
-        # Replace [unreleased] with actual version from package.json
-        sed "s/## \[unreleased\]/## [$CURRENT_VERSION] - $TODAY/" /tmp/auto_changelog.md > /tmp/versioned_changelog.md
+        # Build the new top section with versioned heading and user section
+        {
+          echo "## [$CURRENT_VERSION] - $TODAY"
+          echo ""
+          echo "$USER_SECTION"
+          echo ""
+          # Skip the first line (## [unreleased]) from git-cliff output
+          tail -n +2 /tmp/new_section.md
+        } > /tmp/top_section.md
 
-        # Merge: insert user section after versioned header
-        awk -v user="$USER_SECTION" '
-          /^## \[/ { print; print ""; print user; print ""; next }
-          { print }
-        ' /tmp/versioned_changelog.md > CHANGELOG.md
+        # Get existing changelog body (everything after the header)
+        if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
+          # Skip the header lines, keep everything from first ## onwards
+          awk 'BEGIN {found=0} /^## \[/ {found=1} found {print}' /tmp/old_changelog.md > /tmp/old_body.md
+        else
+          # No existing changelog — start fresh
+          > /tmp/old_body.md
+        fi
+
+        # Combine: header + new top section + existing body
+        {
+          echo "# Changelog"
+          echo ""
+          echo "All notable changes to this project will be documented in this file."
+          echo ""
+          cat /tmp/top_section.md
+          echo ""
+          cat /tmp/old_body.md
+        } > CHANGELOG.md
 
         # Create blob for CHANGELOG.md
         BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
