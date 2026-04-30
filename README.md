@@ -109,7 +109,6 @@ When you want to bump the base version (e.g. `1.0.0` → `1.1.0`):
 4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped before merging
 5. The merge triggers `v1.1.0` release using your curated CHANGELOG.md
 
-**Security:** Release PRs can only contain `package.json`, lockfiles, and `CHANGELOG.md` changes. Any other file changes will fail the `validate-release-pr` check.
 
 ### Draft changelog PRs
 
