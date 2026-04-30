@@ -23,3 +23,4 @@ This release introduces automated changelog management via git-cliff, signed com
 - Remove trigger test files (#53)
 - Remove VERSIONED.md trigger file (#54)
 - Trigger release to test branch package.json version (#57)
+- Remove test trigger file (#58)
