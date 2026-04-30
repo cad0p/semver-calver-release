@@ -33,6 +33,17 @@ runs:
         
         echo "Version bumped: $BASE_VERSION → $CURRENT_VERSION"
         
+        # Validate CHANGELOG heading matches package.json version
+        if [ -f CHANGELOG.md ]; then
+          CHANGELOG_HEADING=$(grep -m1 -oE '^## \[([^]]+)\]' CHANGELOG.md | sed 's/## \[//;s/\]$//')
+          if [ -n "$CHANGELOG_HEADING" ] && [ "$CHANGELOG_HEADING" != "$CURRENT_VERSION" ]; then
+            echo "::error::CHANGELOG.md heading [$CHANGELOG_HEADING] does not match package.json version [$CURRENT_VERSION]"
+            echo "::error::Rename the top section heading in CHANGELOG.md to match the bumped version"
+            exit 1
+          fi
+          echo "CHANGELOG heading validated: [$CHANGELOG_HEADING]"
+        fi
+        
         # Update PR title to match current version
         PR_NUMBER="${{ github.event.pull_request.number }}"
         if [ -n "$PR_NUMBER" ]; then
