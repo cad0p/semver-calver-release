@@ -2,6 +2,94 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3]
+
+<!-- USER-EDITABLE SECTION START -->
+This release improves the draft changelog PR workflow, fixes several edge cases in changelog generation, and adds OIDC-based npm trusted publishing.
+
+**Highlights:**
+- Draft changelog PRs now accumulate commits cleanly on the branch tip without auto-rebase artifacts
+- Fixed duplicate section bug when version strings contain regex characters
+- Changelog generation properly ignores calver tags and uses `index()` for literal matching
+- npm publishing uses OIDC trusted publishing (no explicit tokens required)
+<!-- USER-EDITABLE SECTION END -->
+
+
+### 🚀 Features
+
+- Add PR links in changelog via cliff.toml postprocessor ([#102](https://github.com/cad0p/semver-calver-release/pull/102))
+
+- Ship default cliff.toml with action, allow consumer override ([#104](https://github.com/cad0p/semver-calver-release/pull/104))
+
+- Add validate-package-version action\n\nReplaces validate-version with clearer semantics:\n- On feature branches: blocks package.json version changes (must match main)\n- On release branches: validates version format only\n- Prevents accidental version bumps outside the release workflow ([#134](https://github.com/cad0p/semver-calver-release/pull/134))
+
+- Calver releases are prereleases, floating tags only on base releases\n\n- Calver releases marked as --prerelease on GitHub (not --latest)\n- Base releases remain --latest stable releases\n- Floating tags (v1, v1.x) only update on base releases\n- Consumers pinning to @v1 always get stable base releases\n- README updated to document the new behavior ([#138](https://github.com/cad0p/semver-calver-release/pull/138))
+
+
+### 🐛 Bug Fixes
+
+- Use native git-cliff commit_preprocessors for PR links, remove sed post-processing ([#105](https://github.com/cad0p/semver-calver-release/pull/105))
+
+- Move commit_preprocessors from [changelog] to [git] section ([#106](https://github.com/cad0p/semver-calver-release/pull/106))
+
+- Use previous base release tag for changelog range ([#107](https://github.com/cad0p/semver-calver-release/pull/107))
+
+- Use [unreleased] heading for draft PR, keep finalized sections below ([#109](https://github.com/cad0p/semver-calver-release/pull/109))
+
+- Use [unreleased] heading for draft PR, keep finalized sections below ([#109](https://github.com/cad0p/semver-calver-release/pull/109)) ([#110](https://github.com/cad0p/semver-calver-release/pull/110))
+
+- Validate CHANGELOG heading matches package.json version ([#111](https://github.com/cad0p/semver-calver-release/pull/111))
+
+- Always update single draft section at top, never duplicate ([#112](https://github.com/cad0p/semver-calver-release/pull/112))
+
+- Auto-manage draft heading, start fresh on base bump, remove heading validation ([#113](https://github.com/cad0p/semver-calver-release/pull/113))
+
+- Run release action on release/* branches, skip tag/release there ([#114](https://github.com/cad0p/semver-calver-release/pull/114))
+
+- Always update draft PR on release branches regardless of calver/base ([#115](https://github.com/cad0p/semver-calver-release/pull/115))
+
+- Use previous base tag for changelog range ([#116](https://github.com/cad0p/semver-calver-release/pull/116))
+
+- Compare against main package.json for heading decision ([#118](https://github.com/cad0p/semver-calver-release/pull/118))
+
+- Validate against main package.json instead of branch name ([#119](https://github.com/cad0p/semver-calver-release/pull/119))
+
+- Only skip draft sections when extracting old changelog body ([#121](https://github.com/cad0p/semver-calver-release/pull/121))
+
+- Use main package.json for draft PR branch name ([#122](https://github.com/cad0p/semver-calver-release/pull/122))
+
+- Preserve user-editable section on version bump, scope extraction to first section ([#126](https://github.com/cad0p/semver-calver-release/pull/126))
+
+- Dateless draft headings, add date at release time\n\n- Draft headings no longer include dates (prevents duplicate sections)\n- Dates added to CHANGELOG.md in a commit before tagging base releases\n- Hardened sed pattern with first-match limit and whitespace tolerance\n- Added git identity config and no-op guard for date commit\n- Date commit pushed before tag to ensure tag includes dated CHANGELOG ([#127](https://github.com/cad0p/semver-calver-release/pull/127))
+
+- Only skip first ## [ heading when extracting historical body from main ([#131](https://github.com/cad0p/semver-calver-release/pull/131))
+
+- Keep all ## [ headings from main, only skip header lines ([#132](https://github.com/cad0p/semver-calver-release/pull/132))
+
+- Skip bot commit when changelog is unchanged ([#136](https://github.com/cad0p/semver-calver-release/pull/136))
+
+
+### 🚜 Refactor
+
+- Use main package.json for changelog range start ([#120](https://github.com/cad0p/semver-calver-release/pull/120))
+
+- Use origin/main as source of truth for changelog body ([#130](https://github.com/cad0p/semver-calver-release/pull/130))
+
+
+### 📚 Documentation
+
+- Update README for dateless drafts and origin/main source of truth ([#133](https://github.com/cad0p/semver-calver-release/pull/133))
+
+- Add /examples folder with minimal and basic-npm-package workflow setups ([#135](https://github.com/cad0p/semver-calver-release/pull/135))
+
+- Document Update branch workaround for missing validation checks ([#137](https://github.com/cad0p/semver-calver-release/pull/137))
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Test calver release on main ([#125](https://github.com/cad0p/semver-calver-release/pull/125))
+
+
 ## [1.1.2] - 2026-04-30
 
 <!-- USER-EDITABLE SECTION START -->
