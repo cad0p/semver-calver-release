@@ -20,7 +20,8 @@ runs:
       id: changes
       shell: bash
       run: |
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        # Find the most recent non-floating tag (excludes v1, v1.0 — floating major/minor tags)
+        LAST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
         echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
         if [ -z "$LAST_TAG" ]; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
@@ -78,7 +79,7 @@ runs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         TAG="v$VERSION"
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        LAST_TAG="${{ steps.changes.outputs.last_tag }}"
 
         # Generate notes for this specific release
         if [ -n "$LAST_TAG" ]; then
