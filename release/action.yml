@@ -190,8 +190,13 @@ runs:
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
         TODAY=$(date -u +%Y-%m-%d)
 
-        # Determine heading and user section based on whether version was bumped
-        if [ "$CURRENT_VERSION" != "$BASE_VERSION" ]; then
+        # For heading comparison, use main's package.json as the "base" version
+        # (the release branch may have been bumped ahead by the user)
+        MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "$BASE_VERSION")
+        MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
+
+        # Determine heading and user section based on whether version was bumped from main
+        if [ "$CURRENT_VERSION" != "$MAIN_BASE" ]; then
           # User bumped package.json for a new base release — start fresh
           DRAFT_HEADING="## [$CURRENT_VERSION] - $TODAY"
           USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. -->\n<!-- USER-EDITABLE SECTION END -->'
