@@ -183,6 +183,7 @@ runs:
         {"sha": "$REBASED_SHA", "force": true}
         EOF
               gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH --input /tmp/rebase-ref.json
+              git fetch origin "$BRANCH"
               PARENT_SHA=$REBASED_SHA
             fi
           else
