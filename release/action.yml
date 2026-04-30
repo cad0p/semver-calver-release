@@ -144,6 +144,17 @@ runs:
           exit 0
         fi
 
+        REPO="${{ github.repository }}"
+
+        # Determine parent: branch tip if exists, otherwise main
+        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+          PARENT_SHA=$(git rev-parse "origin/$BRANCH")
+          echo "Accumulating on existing branch $BRANCH (tip: $PARENT_SHA)"
+        else
+          PARENT_SHA=$(git rev-parse origin/main)
+          echo "Creating new branch $BRANCH from main ($PARENT_SHA)"
+        fi
+
         # Create git-cliff config that ignores calver tags for a unified changelog
         cat > /tmp/cliff.toml << 'EOF'
         [changelog]
@@ -157,12 +168,25 @@ runs:
         EOF
 
         # Generate unified changelog since base version (calver tags ignored)
-        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --output CHANGELOG.md
+        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --output /tmp/auto_changelog.md
 
-        # Use GitHub API to create a signed commit (like ghcommit-action)
-        # This creates a commit signed by GitHub's GPG key, satisfying required_signatures
-        REPO="${{ github.repository }}"
-        PARENT_SHA=$(git rev-parse origin/main)
+        # Extract user-editable section from existing branch CHANGELOG.md
+        USER_SECTION=""
+        if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/existing_changelog.md 2>/dev/null; then
+          USER_SECTION=$(awk '/<!-- USER-EDITABLE SECTION START -->/,/<!-- USER-EDITABLE SECTION END -->/' /tmp/existing_changelog.md)
+        fi
+
+        if [ -z "$USER_SECTION" ]; then
+          USER_SECTION="<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. This section is preserved across calver releases. -->
+<!-- USER-EDITABLE SECTION END -->"
+        fi
+
+        # Merge: insert user section after ## [unreleased] header
+        awk -v user="$USER_SECTION" '
+          /^## \[unreleased\]/ { print; print ""; print user; print ""; next }
+          { print }
+        ' /tmp/auto_changelog.md > CHANGELOG.md
 
         # Create blob for CHANGELOG.md
         BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
@@ -170,7 +194,7 @@ runs:
           -f encoding="base64" \
           --jq '.sha')
 
-        # Create tree (using JSON input for nested array)
+        # Create tree (base on parent commit to preserve other branch files)
         cat > /tmp/tree.json << EOF
         {
           "base_tree": "$PARENT_SHA",
@@ -186,7 +210,7 @@ runs:
         EOF
         TREE_SHA=$(gh api "repos/$REPO/git/trees" --input /tmp/tree.json --jq '.sha')
 
-        # Create commit (signed by GitHub)
+        # Create commit (signed by GitHub) — accumulate on branch tip
         cat > /tmp/commit.json << EOF
         {
           "message": "docs: update CHANGELOG.md for upcoming $BASE_TAG release",
@@ -196,11 +220,11 @@ runs:
         EOF
         COMMIT_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/commit.json --jq '.sha')
 
-        # Create or update branch ref (using JSON for boolean force)
+        # Create or update branch ref
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
           echo "Updating branch $BRANCH to $COMMIT_SHA"
           cat > /tmp/ref.json << EOF
-        {"sha": "$COMMIT_SHA", "force": true}
+        {"sha": "$COMMIT_SHA"}
         EOF
           gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH --input /tmp/ref.json
         else
@@ -211,14 +235,15 @@ runs:
           gh api "repos/$REPO/git/refs" --input /tmp/ref.json
         fi
 
-        # Create PR if it doesn't exist
+        # Create draft PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
         if [ "$PR_EXISTS" = "0" ]; then
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
-            --title "docs: changelog for $BASE_TAG" \
-            --body "Accumulated changes since $BASE_TAG. Edit CHANGELOG.md and bump package.json when ready for the next base release." 2>/tmp/pr_error; then
+            --title "release: draft changelog since $BASE_TAG" \
+            --body "Accumulated changes since $BASE_TAG.\n\nEdit the section between \`<!-- USER-EDITABLE SECTION -->\` markers in CHANGELOG.md and bump package.json when ready for the next base release." \
+            --draft 2>/tmp/pr_error; then
             ERROR=$(cat /tmp/pr_error)
             if echo "$ERROR" | grep -q "not permitted to create or approve pull requests"; then
               echo "::warning::GitHub Actions cannot create PRs with the default token."
