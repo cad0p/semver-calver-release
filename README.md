@@ -125,6 +125,8 @@ You can:
 - Bump `package.json` — the PR title auto-updates to match
 - Merge it when ready to ship the next base version
 
+**Validation not appearing?** Bot commits (like `docs(changelog): ...`) do not trigger GitHub Actions workflows. If the `validate` status check is stuck on "Expected", click **"Update branch"** on the PR to create a merge commit that triggers validation.
+
 **Note:** Auto-creating PRs requires enabling "Allow GitHub Actions to create and approve pull requests" in your repo settings (Settings → Actions → General). Without this, the branch is still maintained automatically — you'll just need to create the PR manually.
 
 ## Customizing changelog format
