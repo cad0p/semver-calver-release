@@ -1,0 +1,15 @@
+[changelog]
+header = "# Changelog\n\nAll notable changes to this project will be documented in this file.\n"
+trim = true
+postprocessors = [
+  { pattern = '\(#(\d+)\)', replace = "([#${1}](https://github.com/cad0p/semver-calver-release/pull/${1}))" }
+]
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+[remote.github]
+owner = "cad0p"
+repo = "semver-calver-release"
