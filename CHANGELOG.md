@@ -67,3 +67,4 @@ This release introduces automated changelog management via git-cliff, signed com
 - Clean up README with proper usage example (#7)
 - Update README with git-cliff and draft PR workflow (#18)
 - Retroactively fix v1.1.0 changelog heading (#59)
+# Conflicting change
