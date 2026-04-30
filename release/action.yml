@@ -179,7 +179,10 @@ runs:
         {"message": "docs: rebase changelog branch on main", "tree": "$REBASED_TREE", "parents": ["$MAIN_SHA"]}
         EOF
               REBASED_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/rebase.json --jq '.sha')
-              gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH -f sha="$REBASED_SHA" -f force=true
+              cat > /tmp/rebase-ref.json << EOF
+        {"sha": "$REBASED_SHA", "force": true}
+        EOF
+              gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH --input /tmp/rebase-ref.json
               PARENT_SHA=$REBASED_SHA
             fi
           else
