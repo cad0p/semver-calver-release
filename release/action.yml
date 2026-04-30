@@ -147,30 +147,13 @@ runs:
         fi
 
         REPO="${{ github.repository }}"
-        MAIN_SHA=$(git rev-parse origin/main)
 
         # Determine parent: branch tip if exists, otherwise main
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
-          BRANCH_SHA=$(git rev-parse "origin/$BRANCH")
-          echo "Branch $BRANCH exists at $BRANCH_SHA"
-          
-          # Check if branch is behind main (shared files may have changed)
-          MERGE_BASE=$(git merge-base "$BRANCH_SHA" "$MAIN_SHA")
-          if [ "$MERGE_BASE" != "$MAIN_SHA" ]; then
-            echo "Branch is behind main — rebasing on main ($MAIN_SHA)"
-            # Create rebased commit: replay branch tip on main
-            REBASED_TREE=$(git rev-parse "$BRANCH_SHA^{tree}")
-            cat > /tmp/rebase.json << EOF
-        {"message": "docs: rebase changelog branch on main", "tree": "$REBASED_TREE", "parents": ["$MAIN_SHA"]}
-        EOF
-            REBASED_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/rebase.json --jq '.sha')
-            gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH -f sha="$REBASED_SHA" -f force=true
-            PARENT_SHA=$REBASED_SHA
-          else
-            PARENT_SHA=$BRANCH_SHA
-          fi
+          PARENT_SHA=$(git rev-parse "origin/$BRANCH")
+          echo "Accumulating on existing branch $BRANCH (tip: $PARENT_SHA)"
         else
-          PARENT_SHA=$MAIN_SHA
+          PARENT_SHA=$(git rev-parse origin/main)
           echo "Creating new branch $BRANCH from main ($PARENT_SHA)"
         fi
 
