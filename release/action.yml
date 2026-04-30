@@ -211,6 +211,17 @@ runs:
         git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
 
+        # Re-read branch tip in case it moved while we were working
+        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+          LATEST_PARENT_SHA=$(git rev-parse "origin/$BRANCH")
+          if [ "$LATEST_PARENT_SHA" != "$PARENT_SHA" ]; then
+            PARENT_SHA="$LATEST_PARENT_SHA"
+            echo "Branch tip moved — re-reading from $PARENT_SHA"
+            git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
+            CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
+          fi
+        fi
+
         # Fallback for commit message when version step didn't run
         [ -z "$VERSION" ] && VERSION="$CURRENT_VERSION"
 
@@ -295,14 +306,25 @@ runs:
           cat /tmp/historical_body.md
         } > CHANGELOG.md
 
-        # Create blob for CHANGELOG.md
-        BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
-          -f content="$(base64 CHANGELOG.md | tr -d '\n')" \
-          -f encoding="base64" \
-          --jq '.sha')
+        SHOULD_COMMIT=true
 
-        # Create tree (base on parent commit to preserve other branch files)
-        cat > /tmp/tree.json << EOF
+        # Skip commit if CHANGELOG.md is unchanged (prevents empty bot commits)
+        if git show "$PARENT_SHA:CHANGELOG.md" > /tmp/existing_changelog.md 2>/dev/null; then
+          if diff -q /tmp/existing_changelog.md CHANGELOG.md > /dev/null 2>&1; then
+            echo "No changelog changes since last update — skipping commit"
+            SHOULD_COMMIT=false
+          fi
+        fi
+
+        if [ "$SHOULD_COMMIT" != "false" ]; then
+          # Create blob for CHANGELOG.md
+          BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
+            -f content="$(base64 CHANGELOG.md | tr -d '\n')" \
+            -f encoding="base64" \
+            --jq '.sha')
+
+          # Create tree (base on parent commit to preserve other branch files)
+          cat > /tmp/tree.json << EOF
         {
           "base_tree": "$PARENT_SHA",
           "tree": [
@@ -315,39 +337,40 @@ runs:
           ]
         }
         EOF
-        TREE_SHA=$(gh api "repos/$REPO/git/trees" --input /tmp/tree.json --jq '.sha')
+          TREE_SHA=$(gh api "repos/$REPO/git/trees" --input /tmp/tree.json --jq '.sha')
 
-        # Build conventional commit message for this changelog update
-        LAST_TAG="${{ steps.changes.outputs.last_tag }}"
-        if [ -n "$LAST_TAG" ]; then
-          COMMIT_MSG="docs(changelog): changes from $LAST_TAG to v$VERSION"
-        else
-          COMMIT_MSG="docs(changelog): initial changelog"
-        fi
+          # Build conventional commit message for this changelog update
+          LAST_TAG="${{ steps.changes.outputs.last_tag }}"
+          if [ -n "$LAST_TAG" ]; then
+            COMMIT_MSG="docs(changelog): changes from $LAST_TAG to v$VERSION"
+          else
+            COMMIT_MSG="docs(changelog): initial changelog"
+          fi
 
-        # Create commit (signed by GitHub) — accumulate on branch tip
-        cat > /tmp/commit.json << EOF
+          # Create commit (signed by GitHub) — accumulate on branch tip
+          cat > /tmp/commit.json << EOF
         {
           "message": "$COMMIT_MSG",
           "tree": "$TREE_SHA",
           "parents": ["$PARENT_SHA"]
         }
         EOF
-        COMMIT_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/commit.json --jq '.sha')
+          COMMIT_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/commit.json --jq '.sha')
 
-        # Create or update branch ref
-        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
-          echo "Updating branch $BRANCH to $COMMIT_SHA"
-          cat > /tmp/ref.json << EOF
+          # Create or update branch ref
+          if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+            echo "Updating branch $BRANCH to $COMMIT_SHA"
+            cat > /tmp/ref.json << EOF
         {"sha": "$COMMIT_SHA", "force": true}
         EOF
-          gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH --input /tmp/ref.json
-        else
-          echo "Creating branch $BRANCH at $COMMIT_SHA"
-          cat > /tmp/ref.json << EOF
+            gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH --input /tmp/ref.json
+          else
+            echo "Creating branch $BRANCH at $COMMIT_SHA"
+            cat > /tmp/ref.json << EOF
         {"ref": "refs/heads/$BRANCH", "sha": "$COMMIT_SHA"}
         EOF
-          gh api "repos/$REPO/git/refs" --input /tmp/ref.json
+            gh api "repos/$REPO/git/refs" --input /tmp/ref.json
+          fi
         fi
 
         # Update PR title to match current package.json version (from branch)
