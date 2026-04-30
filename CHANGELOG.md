@@ -17,14 +17,16 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 ### 🚀 Features
 
-- Add PR links in changelog via cliff.toml postprocessor (#102)
+- Add PR links in changelog via cliff.toml postprocessor ([#102](https://github.com/cad0p/semver-calver-release/pull/102))
 
-- Ship default cliff.toml with action, allow consumer override (#104)
+- Ship default cliff.toml with action, allow consumer override ([#104](https://github.com/cad0p/semver-calver-release/pull/104))
 
 
 ### 🐛 Bug Fixes
 
-- Use native git-cliff commit_preprocessors for PR links, remove sed post-processing (#105)
+- Use native git-cliff commit_preprocessors for PR links, remove sed post-processing ([#105](https://github.com/cad0p/semver-calver-release/pull/105))
+
+- Move commit_preprocessors from [changelog] to [git] section ([#106](https://github.com/cad0p/semver-calver-release/pull/106))
 
 
 ## [1.1.0] - 2026-04-30
