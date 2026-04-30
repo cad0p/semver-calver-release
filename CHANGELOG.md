@@ -56,20 +56,21 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Preserve user-editable section on version bump, scope extraction to first section ([#126](https://github.com/cad0p/semver-calver-release/pull/126))
 
+- Dateless draft headings, add date at release time\n\n- Draft headings no longer include dates (prevents duplicate sections)\n- Dates added to CHANGELOG.md in a commit before tagging base releases\n- Hardened sed pattern with first-match limit and whitespace tolerance\n- Added git identity config and no-op guard for date commit\n- Date commit pushed before tag to ensure tag includes dated CHANGELOG ([#127](https://github.com/cad0p/semver-calver-release/pull/127))
+
 
 ### 🚜 Refactor
 
 - Use main package.json for changelog range start ([#120](https://github.com/cad0p/semver-calver-release/pull/120))
+
+- Use origin/main as source of truth for changelog body ([#130](https://github.com/cad0p/semver-calver-release/pull/130))
 
 
 ### ⚙️ Miscellaneous Tasks
 
 - Test calver release on main ([#125](https://github.com/cad0p/semver-calver-release/pull/125))
 
-- Bump version to 1.1.3
 
-
-## [1.1.2] - 2026-04-30
 
 <!-- USER-EDITABLE SECTION START -->
 This release improves the draft changelog PR workflow, fixes several edge cases in changelog generation, and adds OIDC-based npm trusted publishing.
@@ -98,7 +99,6 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 - Use OIDC token for npm trusted publishing (#93)
 - Use index() for literal string match in awk (regex chars in version) (#97)
 
-## [1.1.0] - 2026-04-30
 
 ### 🚀 Features
 
