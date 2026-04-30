@@ -42,6 +42,8 @@ All notable changes to this project will be documented in this file.
 
 - Compare against main package.json for heading decision ([#118](https://github.com/cad0p/semver-calver-release/pull/118))
 
+- Validate against main package.json instead of branch name ([#119](https://github.com/cad0p/semver-calver-release/pull/119))
+
 
 ## [1.1.0] - 2026-04-30
 
