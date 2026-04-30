@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 ## [unreleased]
 
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. This section is preserved across calver releases. -->
+<!-- USER-EDITABLE SECTION END -->
+
+
 ### 🚀 Features
 
 - Auto-update floating v1 tag on release (#3)
@@ -25,6 +30,9 @@ All notable changes to this project will be documented in this file.
 - Use GitHub API for signed commits on draft PR branch (#24)
 - Use JSON input for GitHub API tree/commit creation (#25)
 - Use JSON input for PATCH ref update (boolean force) (#26)
+- Draft PR, accumulate commits, preserve user-editable section (#27)
+- Use heredoc for multiline string in YAML (#28)
+- Escape newlines in default user section (#29)
 
 ### 📚 Documentation
 
