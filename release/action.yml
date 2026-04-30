@@ -146,27 +146,37 @@ runs:
         git tag "$TAG"
         git push origin "$TAG"
 
-        # Update floating major version tag
-        MAJOR=$(echo "$VERSION" | grep -oE '^[0-9]+')
-        git tag -f "v$MAJOR"
-        git push origin "v$MAJOR" --force
+        # For base releases: update floating tags so consumers get stable versions
+        # For calver: skip floating tags — consumers should pin to base releases
+        if [ "$IS_CALVER" != "true" ]; then
+          # Update floating major version tag
+          MAJOR=$(echo "$VERSION" | grep -oE '^[0-9]+')
+          git tag -f "v$MAJOR"
+          git push origin "v$MAJOR" --force
 
-        # Update floating major.minor version tag
-        MAJOR_MINOR=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
-        git tag -f "v$MAJOR_MINOR"
-        git push origin "v$MAJOR_MINOR" --force
+          # Update floating major.minor version tag
+          MAJOR_MINOR=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+')
+          git tag -f "v$MAJOR_MINOR"
+          git push origin "v$MAJOR_MINOR" --force
+        fi
 
-        # For base releases: use curated CHANGELOG.md if available
-        # For calver: use git-cliff generated notes
-        if [ "$IS_CALVER" = "true" ] || [ ! -f CHANGELOG.md ]; then
+        # Determine release notes source
+        if [ -f CHANGELOG.md ] && [ "$IS_CALVER" != "true" ]; then
+          NOTES_FILE="CHANGELOG.md"
+        else
+          NOTES_FILE="/tmp/notes.md"
+        fi
+
+        # Calver releases are prereleases; base releases are latest stable
+        if [ "$IS_CALVER" = "true" ]; then
           gh release create "$TAG" \
             --title "$TAG" \
-            --notes-file /tmp/notes.md \
-            --latest
+            --notes-file "$NOTES_FILE" \
+            --prerelease
         else
           gh release create "$TAG" \
             --title "$TAG" \
-            --notes-file CHANGELOG.md \
+            --notes-file "$NOTES_FILE" \
             --latest
         fi
 
