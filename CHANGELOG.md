@@ -2,31 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.2] - 2026-04-30
-
-<!-- USER-EDITABLE SECTION START -->
-This release introduces automated changelog management via git-cliff, signed commits via the GitHub API, and draft PRs for curating base releases.
-<!-- USER-EDITABLE SECTION END -->
-
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test clean changelog (#65)
-
-## [1.1.0] - 2026-04-30
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-- Read package.json from branch for versioned changelog and PR title (#56)
-- Prepend new changelog section instead of regenerating entire file (#60)
-- Skip first draft section when extracting old changelog body (#62)
-- Extract only first user-editable section (#64)
-
 ## [1.1.0] - 2026-04-30
 
 ### 🚀 Features
@@ -67,4 +42,3 @@ This release introduces automated changelog management via git-cliff, signed com
 - Clean up README with proper usage example (#7)
 - Update README with git-cliff and draft PR workflow (#18)
 - Retroactively fix v1.1.0 changelog heading (#59)
-# Conflicting change
