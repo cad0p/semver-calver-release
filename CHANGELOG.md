@@ -38,6 +38,8 @@ All notable changes to this project will be documented in this file.
 
 - Always update draft PR on release branches regardless of calver/base ([#115](https://github.com/cad0p/semver-calver-release/pull/115))
 
+- Use previous base tag for changelog range ([#116](https://github.com/cad0p/semver-calver-release/pull/116))
+
 
 ## [1.1.0] - 2026-04-30
 
