@@ -51,3 +51,4 @@ All notable changes to this project will be documented in this file.
 - Trigger second release to test commit accumulation (#31)
 - Trigger release to test conventional commit style (#33)
 - Trigger release to test filtered last_tag (#35)
+- Trigger release to test new PR title (#36)
