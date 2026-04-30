@@ -185,10 +185,14 @@ runs:
           tail -n +2 /tmp/new_section.md
         } > /tmp/top_section.md
 
-        # Get existing changelog body (everything after the header)
+        # Get existing changelog body (skip the first ## section which is the current draft)
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
-          # Skip the header lines, keep everything from first ## onwards
-          awk 'BEGIN {found=0} /^## \[/ {found=1} found {print}' /tmp/old_changelog.md > /tmp/old_body.md
+          # Skip header, skip first ## section (current draft), keep rest
+          awk '
+            BEGIN { section=0 }
+            /^## \[/ { section++ }
+            section >= 2 { print }
+          ' /tmp/old_changelog.md > /tmp/old_body.md
         else
           # No existing changelog — start fresh
           > /tmp/old_body.md
