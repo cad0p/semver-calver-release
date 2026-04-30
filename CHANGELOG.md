@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 - Remove test verification files (#92)
 - Trigger clean draft PR (#95)
 - Remove trigger file (#96)
+- Test no duplicate sections (#98)
 
 ## [1.1.0] - 2026-04-30
 
