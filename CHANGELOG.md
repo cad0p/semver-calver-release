@@ -9,314 +9,55 @@ This release introduces automated changelog management via git-cliff, signed com
 <!-- USER-EDITABLE SECTION END -->
 
 
+### 🚀 Features
+
+- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
+
 ### 🐛 Bug Fixes
 
+- Validation workflow updates PR title on version bump (#55)
+- Read package.json from branch for versioned changelog and PR title (#56)
+- Prepend new changelog section instead of regenerating entire file (#60)
+- Skip first draft section when extracting old changelog body (#62)
 - Extract only first user-editable section (#64)
-## [1.1.0-20260430.11] - 2026-04-30
 
-### ⚙️ Miscellaneous Tasks
+## [1.1.0] - 2026-04-30
 
-- Remove prepend test file (#63)
-## [1.1.0-20260430.10] - 2026-04-30
+### 🚀 Features
 
-### 🐛 Bug Fixes
-
-- Skip first draft section when extracting old changelog body (#62)
-## [1.1.0-20260430.9] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test changelog prepend (#61)
-## [1.1.0-20260430.8] - 2026-04-30
+- Auto-update floating v1 tag on release (#3)
+- Add floating v1.0 tag for major.minor pinning (#6)
+- Auto-manage CHANGELOG.md with conventional-changelog (#8)
+- Use git-cliff with draft changelog PR (#14)
 
 ### 🐛 Bug Fixes
 
-- Prepend new changelog section instead of regenerating entire file (#60)
+- Configure git identity for annotated tag (#4)
+- Use lightweight tag instead of annotated tag (#5)
+- Replace deprecated conventional-changelog-cli with shell script (#9)
+- Tag triggering commit, remove redundant release title (#11)
+- Use generate-notes, tag before changelog commit (#13)
+- Git-cliff uses positional range, not --from/--to (#15)
+- Graceful PR creation, add pull-requests: write permission (#16)
+- Force checkout to handle untracked CHANGELOG.md (#17)
+- Clearer error when GitHub blocks Actions from creating PRs (#20)
+- Unified changelog on draft PR, always reset branch from main (#23)
+- Use GitHub API for signed commits on draft PR branch (#24)
+- Use JSON input for GitHub API tree/commit creation (#25)
+- Use JSON input for PATCH ref update (boolean force) (#26)
+- Draft PR, accumulate commits, preserve user-editable section (#27)
+- Use heredoc for multiline string in YAML (#28)
+- Escape newlines in default user section (#29)
+- Conventional commit style for PR title and changelog commits (#32)
+- Exclude floating tags from last_tag detection (#34)
+- PR body newlines, shorter commit messages (#38)
+- Use quoted string with actual newlines for PR body (#40)
+- Use $'...' bash syntax for PR body newlines (#42)
+- Use printf for PR body newlines (#44)
+- Remove literal backslash escapes from PR body (#47)
 
 ### 📚 Documentation
 
+- Clean up README with proper usage example (#7)
+- Update README with git-cliff and draft PR workflow (#18)
 - Retroactively fix v1.1.0 changelog heading (#59)
-## [1.1.0-20260430.7] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove test trigger file (#58)
-## [1.1.0-20260430.6] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test branch package.json version (#57)
-## [1.1.0-20260430.5] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Read package.json from branch for versioned changelog and PR title (#56)
-## [1.1.0-20260430.4] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-## [1.1.0-20260430.3] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove VERSIONED.md trigger file (#54)
-## [1.1.0-20260430.2] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove trigger test files (#53)
-## [1.1.0-20260430.1] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test versioned changelog (#51)
-## [1.1.0-20260430.0] - 2026-04-30
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-## [1.1.0-20260430.10] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Skip first draft section when extracting old changelog body (#62)
-## [1.1.0-20260430.9] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test changelog prepend (#61)
-## [1.1.0-20260430.8] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Prepend new changelog section instead of regenerating entire file (#60)
-
-### 📚 Documentation
-
-- Retroactively fix v1.1.0 changelog heading (#59)
-## [1.1.0-20260430.7] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove test trigger file (#58)
-## [1.1.0-20260430.6] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test branch package.json version (#57)
-## [1.1.0-20260430.5] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Read package.json from branch for versioned changelog and PR title (#56)
-## [1.1.0-20260430.4] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-## [1.1.0-20260430.3] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove VERSIONED.md trigger file (#54)
-## [1.1.0-20260430.2] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove trigger test files (#53)
-## [1.1.0-20260430.1] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test versioned changelog (#51)
-## [1.1.0-20260430.0] - 2026-04-30
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-## [1.1.0-20260430.9] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test changelog prepend (#61)
-## [1.1.0-20260430.8] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Prepend new changelog section instead of regenerating entire file (#60)
-
-### 📚 Documentation
-
-- Retroactively fix v1.1.0 changelog heading (#59)
-## [1.1.0-20260430.7] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove test trigger file (#58)
-## [1.1.0-20260430.6] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test branch package.json version (#57)
-## [1.1.0-20260430.5] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Read package.json from branch for versioned changelog and PR title (#56)
-## [1.1.0-20260430.4] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-## [1.1.0-20260430.3] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove VERSIONED.md trigger file (#54)
-## [1.1.0-20260430.2] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove trigger test files (#53)
-## [1.1.0-20260430.1] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test versioned changelog (#51)
-## [1.1.0-20260430.0] - 2026-04-30
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-## [1.1.0-20260430.8] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Prepend new changelog section instead of regenerating entire file (#60)
-
-### 📚 Documentation
-
-- Retroactively fix v1.1.0 changelog heading (#59)
-## [1.1.0-20260430.7] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove test trigger file (#58)
-## [1.1.0-20260430.6] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test branch package.json version (#57)
-## [1.1.0-20260430.5] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Read package.json from branch for versioned changelog and PR title (#56)
-## [1.1.0-20260430.4] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-## [1.1.0-20260430.3] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove VERSIONED.md trigger file (#54)
-## [1.1.0-20260430.2] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove trigger test files (#53)
-## [1.1.0-20260430.1] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test versioned changelog (#51)
-## [1.1.0-20260430.0] - 2026-04-30
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-## [1.1.2] - 2026-04-30
-
-<!-- USER-EDITABLE SECTION START -->
-This release introduces automated changelog management via git-cliff, signed commits via the GitHub API, and draft PRs for curating base releases. The semver-calver-release action now supports unified changelogs that accumulate across calver releases.
-<!-- USER-EDITABLE SECTION END -->
-
-
-### 🐛 Bug Fixes
-
-- Prepend new changelog section instead of regenerating entire file (#60)
-
-### 📚 Documentation
-
-- Retroactively fix v1.1.0 changelog heading (#59)
-## [1.1.0-20260430.7] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove test trigger file (#58)
-## [1.1.0-20260430.6] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test branch package.json version (#57)
-## [1.1.0-20260430.5] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Read package.json from branch for versioned changelog and PR title (#56)
-## [1.1.0-20260430.4] - 2026-04-30
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-## [1.1.0-20260430.3] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove VERSIONED.md trigger file (#54)
-## [1.1.0-20260430.2] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Remove trigger test files (#53)
-## [1.1.0-20260430.1] - 2026-04-30
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test versioned changelog (#51)
-## [1.1.0-20260430.0] - 2026-04-30
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-## [1.1.2] - 2026-04-30
-
-<!-- USER-EDITABLE SECTION START -->
-This release introduces automated changelog management via git-cliff, signed commits via the GitHub API, and draft PRs for curating base releases. The semver-calver-release action now supports unified changelogs that accumulate across calver releases.
-<!-- USER-EDITABLE SECTION END -->
-
-
-### 🚀 Features
-
-- Versioned changelog headings, dynamic PR titles, release PR validation (#50)
-
-### 🐛 Bug Fixes
-
-- Validation workflow updates PR title on version bump (#55)
-- Read package.json from branch for versioned changelog and PR title (#56)
-
-### ⚙️ Miscellaneous Tasks
-
-- Trigger release to test versioned changelog (#51)
-- Remove trigger test files (#53)
-- Remove VERSIONED.md trigger file (#54)
-- Trigger release to test branch package.json version (#57)
-- Remove test trigger file (#58)
