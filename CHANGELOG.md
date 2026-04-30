@@ -80,6 +80,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Add /examples folder with minimal and basic-npm-package workflow setups ([#135](https://github.com/cad0p/semver-calver-release/pull/135))
 
+- Document Update branch workaround for missing validation checks ([#137](https://github.com/cad0p/semver-calver-release/pull/137))
+
 
 ### ⚙️ Miscellaneous Tasks
 
