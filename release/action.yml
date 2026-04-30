@@ -158,8 +158,9 @@ runs:
         BRANCH="release/$BASE_TAG"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
-        # Only maintain draft PR for calver releases (between base releases)
-        if [ "$IS_CALVER" != "true" ]; then
+        # On main: only maintain draft PR for calver releases.
+        # On release branches (skip_release=true): always update draft PR.
+        if [ "${{ inputs.skip_release }}" != "true" ] && [ "$IS_CALVER" != "true" ]; then
           echo "Base release — no draft PR needed"
           exit 0
         fi
