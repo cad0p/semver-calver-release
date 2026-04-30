@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [calver-released]
+
+<!-- USER-EDITABLE SECTION START -->
+This release improves the draft changelog PR workflow, fixes several edge cases in changelog generation, and adds OIDC-based npm trusted publishing.
+
+**Highlights:**
+- Draft changelog PRs now accumulate commits cleanly on the branch tip without auto-rebase artifacts
+- Fixed duplicate section bug when version strings contain regex characters
+- Changelog generation properly ignores calver tags and uses `index()` for literal matching
+- npm publishing uses OIDC trusted publishing (no explicit tokens required)
+<!-- USER-EDITABLE SECTION END -->
+
+
+### 🚀 Features
+
+- Add PR links in changelog via cliff.toml postprocessor ([#102](https://github.com/cad0p/semver-calver-release/pull/102))
+
+- Ship default cliff.toml with action, allow consumer override ([#104](https://github.com/cad0p/semver-calver-release/pull/104))
+
+
+### 🐛 Bug Fixes
+
+- Use native git-cliff commit_preprocessors for PR links, remove sed post-processing ([#105](https://github.com/cad0p/semver-calver-release/pull/105))
+
+- Move commit_preprocessors from [changelog] to [git] section ([#106](https://github.com/cad0p/semver-calver-release/pull/106))
+
+- Use previous base release tag for changelog range ([#107](https://github.com/cad0p/semver-calver-release/pull/107))
+
+- Use [unreleased] heading for draft PR, keep finalized sections below ([#109](https://github.com/cad0p/semver-calver-release/pull/109))
+
+
 ## [1.1.2] - 2026-04-30
 
 <!-- USER-EDITABLE SECTION START -->
