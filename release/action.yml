@@ -201,11 +201,12 @@ runs:
         # Get existing changelog body (skip header and old draft section for this version)
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
           # First skip the header (lines before first ## [), then skip the draft section for CURRENT_VERSION
+          # Use index() for literal string match (ver contains regex chars like [])
           awk -v ver="## [$CURRENT_VERSION]" '
             BEGIN { in_header=1 }
             /^## \[/ { in_header=0 }
             in_header { next }
-            $0 ~ ver { skip=1; next }
+            index($0, ver) > 0 { skip=1; next }
             skip && /^## \[/ { skip=0 }
             !skip { print }
           ' /tmp/old_changelog.md > /tmp/old_body.md
