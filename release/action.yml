@@ -177,12 +177,7 @@ runs:
         fi
 
         if [ -z "$USER_SECTION" ]; then
-          USER_SECTION=$(cat <<'INNEREOF'
-<!-- USER-EDITABLE SECTION START -->
-<!-- Add your curated release notes here. This section is preserved across calver releases. -->
-<!-- USER-EDITABLE SECTION END -->
-INNEREOF
-)
+          USER_SECTION="<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->"
         fi
 
         # Merge: insert user section after ## [unreleased] header
