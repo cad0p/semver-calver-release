@@ -39,7 +39,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: cad0p/semver-calver-release/validate-version@v1
+      - uses: cad0p/semver-calver-release/validate-package-version@v1
 
   release:
     if: github.event_name == 'push'
@@ -114,12 +114,28 @@ Your custom config is applied **before** PR link injection, so you don't need to
 
 ## Actions
 
-### `validate-version`
+### `validate-package-version`
 
-Validates `package.json` version format on pull requests.
+Prevents accidental `package.json` version changes on feature branches and validates format on release branches.
 
 ```yaml
-- uses: cad0p/semver-calver-release/validate-version@v1
+- uses: cad0p/semver-calver-release/validate-package-version@v1
+```
+
+**Behavior:**
+- **Feature branches** (`feature/*`, `fix/*`, etc.): Errors if `package.json` version differs from `main`
+- **Release branches** (`release/v*`): Validates format only (version bump is expected)
+
+**Inputs:**
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `base-branch` | No | `main` | Branch to compare package.json version against |
+
+```yaml
+- uses: cad0p/semver-calver-release/validate-package-version@v1
+  with:
+    base-branch: develop
 ```
 
 ### `release`
