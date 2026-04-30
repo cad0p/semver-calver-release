@@ -157,13 +157,10 @@ runs:
         BASE_TAG="v$BASE_VERSION"
         BRANCH="release/$BASE_TAG"
         
-        # Find the previous released base tag for changelog range
-        # If current base was already released, use it; otherwise find the one before
-        if git tag -l "$BASE_TAG" | grep -q .; then
-          RANGE_START="$BASE_TAG"
-        else
-          RANGE_START=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '1p' || echo "")
-        fi
+        # Determine changelog range start from main's package.json (source of truth for what's released)
+        MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "0.0.0")
+        MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
+        RANGE_START="v$MAIN_BASE"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
         # On main: only maintain draft PR for calver releases.
