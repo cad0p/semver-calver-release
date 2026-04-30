@@ -154,13 +154,14 @@ runs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         BASE_VERSION="${{ steps.version.outputs.base_version }}"
-        BASE_TAG="v$BASE_VERSION"
-        BRANCH="release/$BASE_TAG"
         
-        # Determine changelog range start from main's package.json (source of truth for what's released)
+        # Determine changelog range start and branch name from main's package.json
+        # (source of truth for what's released — the draft accumulates since last release)
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "0.0.0")
         MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
-        RANGE_START="v$MAIN_BASE"
+        BASE_TAG="v$MAIN_BASE"
+        BRANCH="release/$BASE_TAG"
+        RANGE_START="$BASE_TAG"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
         # On main: only maintain draft PR for calver releases.
