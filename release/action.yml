@@ -246,7 +246,7 @@ runs:
         # Create draft PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
         if [ "$PR_EXISTS" = "0" ]; then
-          PR_BODY=$'Accumulated changes since '"$BASE_TAG"$'.\n\nEdit the section between <!-- USER-EDITABLE SECTION --> markers in CHANGELOG.md and bump package.json when ready for the next base release.'
+          PR_BODY=$(printf 'Accumulated changes since %s.\n\nEdit the section between \`\u003c!-- USER-EDITABLE SECTION --\u003e\` markers in CHANGELOG.md and bump package.json when ready for the next base release.' "$BASE_TAG")
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
