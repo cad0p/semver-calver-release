@@ -76,22 +76,26 @@ Every push to `main` that changes code triggers:
 3. Tag + GitHub release
 4. Publish to npm (with `next` dist-tag for prereleases)
 5. Update floating tags (`v1`, `v1.0`)
+6. Update draft changelog PR branch with accumulated changes
 
 ### Base releases (manual, curated)
 
 When you want to bump the base version (e.g. `1.0.0` → `1.1.0`):
 
 1. **Find the draft PR** (e.g. `release/v1.0.0`) — it contains accumulated changelogs since the last base release
-2. **Edit CHANGELOG.md** on that branch to add your preamble/notes
+2. **Edit CHANGELOG.md** on that branch to add your preamble/notes between the `<!-- USER-EDITABLE SECTION -->` markers
 3. **Bump `package.json`** version to `1.1.0`
-4. **Merge the PR**
+4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped before merging
 5. The merge triggers `v1.1.0` release using your curated CHANGELOG.md
 
 ### Draft changelog PRs
 
-After the first calver release following a base release, a branch like `release/v1.0.0` is maintained with accumulated changelogs. You can:
+After the first calver release following a base release, a branch like `release/v1.0.0` is maintained with accumulated changelogs. The changelog heading uses the current `package.json` version (e.g. `## [1.1.0] - 2026-04-30`) instead of `[unreleased]`.
+
+You can:
 - View it to see all changes since the base release
 - Edit it to curate the changelog before a base release
+- Bump `package.json` — the PR title auto-updates to match
 - Merge it when ready to ship the next base version
 
 **Note:** Auto-creating PRs requires enabling "Allow GitHub Actions to create and approve pull requests" in your repo settings (Settings → Actions → General). Without this, the branch is still maintained automatically — you'll just need to create the PR manually.
@@ -143,13 +147,38 @@ Publishes to npm with **smart skip** — if the version already exists, the acti
 |-------|----------|-------------|
 | `tag` | No | Git tag to publish (defaults to `github.event.release.tag_name`) |
 
+### `validate-release-pr`
+
+Validates that `package.json` version is bumped before merging a release PR. Auto-updates the PR title to match the bumped version.
+
+```yaml
+# .github/workflows/validate-release-pr.yml
+name: Validate Release PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cad0p/semver-calver-release/validate-release-pr@v1
+```
+
+To **block merges** until validation passes, add `validate` as a required status check in your branch protection rules.
+
 ## Pinning
 
 | Ref | Meaning |
 |-----|---------|
 | `@v1` | Latest v1.x.x — recommended for CI |
-| `@v1.0` | Latest v1.0.x — minor version locked |
-| `@v1.0.0` or `@v1.0.0-20260429.0` | Exact release — immutable |
+| `@v1.1` | Latest v1.1.x — minor version locked |
+| `@v1.1.0` or `@v1.1.0-20260429.0` | Exact release — immutable |
 
 ## Self-releasing this action
 
