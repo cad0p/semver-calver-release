@@ -21,6 +21,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Ship default cliff.toml with action, allow consumer override ([#104](https://github.com/cad0p/semver-calver-release/pull/104))
 
+- Add validate-package-version action\n\nReplaces validate-version with clearer semantics:\n- On feature branches: blocks package.json version changes (must match main)\n- On release branches: validates version format only\n- Prevents accidental version bumps outside the release workflow ([#134](https://github.com/cad0p/semver-calver-release/pull/134))
+
 
 ### 🐛 Bug Fixes
 
