@@ -32,6 +32,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Use [unreleased] heading for draft PR, keep finalized sections below ([#109](https://github.com/cad0p/semver-calver-release/pull/109))
 
+- Use [unreleased] heading for draft PR, keep finalized sections below ([#109](https://github.com/cad0p/semver-calver-release/pull/109)) ([#110](https://github.com/cad0p/semver-calver-release/pull/110))
+
 
 ## [1.1.2] - 2026-04-30
 
