@@ -1,13 +1,15 @@
 name: 'Validate Release PR'
-description: 'Ensure package.json version is bumped before merging a release PR'
+description: 'Ensure package.json version is bumped before merging a release PR, and update PR title'
 
 runs:
   using: 'composite'
   steps:
     - uses: actions/checkout@v6
 
-    - name: Validate version bump
+    - name: Validate version bump and update PR title
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         BRANCH="${{ github.head_ref }}"
         
@@ -30,3 +32,10 @@ runs:
         fi
         
         echo "Version bumped: $BASE_VERSION → $CURRENT_VERSION"
+        
+        # Update PR title to match current version
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+        if [ -n "$PR_NUMBER" ]; then
+          gh pr edit "$PR_NUMBER" --title "chore(release): v$CURRENT_VERSION" 2>/dev/null || true
+          echo "Updated PR title to: chore(release): v$CURRENT_VERSION"
+        fi
