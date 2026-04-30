@@ -205,8 +205,20 @@ runs:
           USER_SECTION="<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->"
         fi
 
-        # Generate only the NEW top section (changes since base tag, no header)
-        git-cliff "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
+        # Create git-cliff config that ignores calver tags
+        cat > /tmp/cliff.toml << 'EOF'
+        [changelog]
+        header = ""
+        trim = true
+
+        [git]
+        conventional_commits = true
+        filter_unconventional = true
+        tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+        EOF
+
+        # Generate unified changelog since base version (calver tags ignored)
+        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
 
         # Build the new top section with versioned heading and user section
         {
@@ -218,13 +230,13 @@ runs:
           tail -n +2 /tmp/new_section.md
         } > /tmp/top_section.md
 
-        # Get existing changelog body (skip the first ## section which is the current draft)
+        # Get existing changelog body (skip the old draft section for this version)
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
-          # Skip header, skip first ## section (current draft), keep rest
-          awk '
-            BEGIN { section=0 }
-            /^## \[/ { section++ }
-            section >= 2 { print }
+          # Skip everything from ## [CURRENT_VERSION] until the next ## [ or end
+          awk -v ver="## [$CURRENT_VERSION]" '
+            $0 ~ ver { skip=1; next }
+            skip && /^## \[/ { skip=0 }
+            !skip { print }
           ' /tmp/old_changelog.md > /tmp/old_body.md
         else
           # No existing changelog — start fresh
