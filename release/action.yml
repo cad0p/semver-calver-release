@@ -196,13 +196,19 @@ runs:
         EOF
         COMMIT_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/commit.json --jq '.sha')
 
-        # Create or update branch ref
+        # Create or update branch ref (using JSON for boolean force)
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
           echo "Updating branch $BRANCH to $COMMIT_SHA"
-          gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH -f sha="$COMMIT_SHA" -f force=true
+          cat > /tmp/ref.json << EOF
+        {"sha": "$COMMIT_SHA", "force": true}
+        EOF
+          gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH --input /tmp/ref.json
         else
           echo "Creating branch $BRANCH at $COMMIT_SHA"
-          gh api "repos/$REPO/git/refs" -f ref="refs/heads/$BRANCH" -f sha="$COMMIT_SHA"
+          cat > /tmp/ref.json << EOF
+        {"ref": "refs/heads/$BRANCH", "sha": "$COMMIT_SHA"}
+        EOF
+          gh api "repos/$REPO/git/refs" --input /tmp/ref.json
         fi
 
         # Create PR if it doesn't exist
