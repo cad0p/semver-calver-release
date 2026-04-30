@@ -170,21 +170,31 @@ runs:
           -f encoding="base64" \
           --jq '.sha')
 
-        # Create tree
-        TREE_SHA=$(gh api "repos/$REPO/git/trees" \
-          -f base_tree="$PARENT_SHA" \
-          -f "tree[0][path]"="CHANGELOG.md" \
-          -f "tree[0][mode]"="100644" \
-          -f "tree[0][type]"="blob" \
-          -f "tree[0][sha]"="$BLOB_SHA" \
-          --jq '.sha')
+        # Create tree (using JSON input for nested array)
+        cat > /tmp/tree.json << EOF
+        {
+          "base_tree": "$PARENT_SHA",
+          "tree": [
+            {
+              "path": "CHANGELOG.md",
+              "mode": "100644",
+              "type": "blob",
+              "sha": "$BLOB_SHA"
+            }
+          ]
+        }
+        EOF
+        TREE_SHA=$(gh api "repos/$REPO/git/trees" --input /tmp/tree.json --jq '.sha')
 
         # Create commit (signed by GitHub)
-        COMMIT_SHA=$(gh api "repos/$REPO/git/commits" \
-          -f message="docs: update CHANGELOG.md for upcoming $BASE_TAG release" \
-          -f tree="$TREE_SHA" \
-          -f "parents[]"="$PARENT_SHA" \
-          --jq '.sha')
+        cat > /tmp/commit.json << EOF
+        {
+          "message": "docs: update CHANGELOG.md for upcoming $BASE_TAG release",
+          "tree": "$TREE_SHA",
+          "parents": ["$PARENT_SHA"]
+        }
+        EOF
+        COMMIT_SHA=$(gh api "repos/$REPO/git/commits" --input /tmp/commit.json --jq '.sha')
 
         # Create or update branch ref
         if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
