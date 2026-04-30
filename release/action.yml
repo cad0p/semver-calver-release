@@ -147,19 +147,25 @@ runs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git config user.name "github-actions[bot]"
 
-        # Generate full accumulated changelog since base version
-        git-cliff "$BASE_TAG..HEAD" --output CHANGELOG.md
+        # Create git-cliff config that ignores calver tags for a unified changelog
+        cat > /tmp/cliff.toml << 'EOF'
+        [changelog]
+        header = "# Changelog\n\nAll notable changes to this project will be documented in this file.\n"
+        trim = true
 
-        # Check if branch exists on remote
-        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
-          echo "Updating existing draft PR branch: $BRANCH"
-          git fetch origin "$BRANCH"
-          git checkout -f "$BRANCH" || git checkout -b "$BRANCH" origin/$BRANCH
-          git merge -X theirs origin/main --no-edit || true
-        else
-          echo "Creating new draft PR branch: $BRANCH"
-          git checkout -b "$BRANCH"
-        fi
+        [git]
+        conventional_commits = true
+        filter_unconventional = true
+        tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+        EOF
+
+        # Always rebuild draft branch from current main for a clean, mergeable history
+        git fetch origin main
+        git checkout origin/main
+        git checkout -B "$BRANCH"
+
+        # Generate unified changelog since base version (calver tags ignored)
+        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --output CHANGELOG.md
 
         git add CHANGELOG.md
         git commit -m "docs: update CHANGELOG.md for upcoming $BASE_TAG release" || true
