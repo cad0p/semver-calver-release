@@ -94,10 +94,11 @@ That's it. No other workflow files needed.
 Every push to `main` that changes code triggers:
 1. Compute next version (e.g. `1.0.0-20260429.0`)
 2. Generate release notes with [git-cliff](https://git-cliff.org)
-3. Tag + GitHub release
-4. Publish to npm (with `next` dist-tag for prereleases)
-5. Update floating tags (`v1`, `v1.0`)
-6. Update draft changelog PR branch with accumulated changes
+3. Tag + **prerelease** on GitHub (calver builds are marked as prerelease)
+4. Publish to npm (with `next` dist-tag)
+5. Update draft changelog PR branch with accumulated changes
+
+> **Note:** Floating tags (`v1`, `v1.x`) are **not** updated for calver releases. Consumers pinning to `@v1` always get the last stable base release.
 
 ### Base releases (manual, curated)
 
@@ -107,7 +108,7 @@ When you want to bump the base version (e.g. `1.1.2` → `1.1.3`):
 2. **Edit CHANGELOG.md** on that branch to add your preamble/notes between the `<!-- USER-EDITABLE SECTION -->` markers
 3. **Bump `package.json`** version to `1.1.3`
 4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped and no unexpected files are present
-5. The merge triggers `v1.1.3` release using your curated CHANGELOG.md
+5. The merge triggers `v1.1.3` **base release** using your curated CHANGELOG.md — floating tags (`v1`, `v1.x`) are updated to this release
 
 
 ### Draft changelog PRs
