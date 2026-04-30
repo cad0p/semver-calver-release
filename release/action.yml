@@ -21,6 +21,7 @@ runs:
       shell: bash
       run: |
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
         if [ -z "$LAST_TAG" ]; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
         else
@@ -208,10 +209,18 @@ runs:
         EOF
         TREE_SHA=$(gh api "repos/$REPO/git/trees" --input /tmp/tree.json --jq '.sha')
 
+        # Build conventional commit message for this changelog update
+        LAST_TAG="${{ steps.changes.outputs.last_tag }}"
+        if [ -n "$LAST_TAG" ]; then
+          COMMIT_MSG="docs(changelog): changes between $LAST_TAG and v$VERSION"
+        else
+          COMMIT_MSG="docs(changelog): initial changelog"
+        fi
+
         # Create commit (signed by GitHub) — accumulate on branch tip
         cat > /tmp/commit.json << EOF
         {
-          "message": "docs: update CHANGELOG.md for upcoming $BASE_TAG release",
+          "message": "$COMMIT_MSG",
           "tree": "$TREE_SHA",
           "parents": ["$PARENT_SHA"]
         }
@@ -239,7 +248,7 @@ runs:
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
-            --title "release: draft changelog since $BASE_TAG" \
+            --title "chore(release): v<VERSION>" \
             --body "Accumulated changes since $BASE_TAG.\n\nEdit the section between \`<!-- USER-EDITABLE SECTION -->\` markers in CHANGELOG.md and bump package.json when ready for the next base release." \
             --draft 2>/tmp/pr_error; then
             ERROR=$(cat /tmp/pr_error)
