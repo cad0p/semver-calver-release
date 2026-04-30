@@ -21,7 +21,7 @@ runs:
       shell: bash
       run: |
         # Find the most recent non-floating tag (excludes v1, v1.0 — floating major/minor tags)
-        LAST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+        LAST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | sed -n '1p' || echo "")
         echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
         if [ -z "$LAST_TAG" ]; then
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
@@ -70,7 +70,7 @@ runs:
     - name: Install git-cliff
       if: steps.changes.outputs.has_changes == 'true'
       shell: bash
-      run: npm install -g git-cliff
+      run: npm install -g git-cliff@2
 
     - name: Generate release notes
       if: steps.changes.outputs.has_changes == 'true'
@@ -84,20 +84,21 @@ runs:
 
         # Use repo's cliff.toml if present; otherwise fall back to the action's default
         if [ -f cliff.toml ]; then
-          CLIFF_CONFIG="cliff.toml"
+          cp cliff.toml /tmp/cliff.toml
         else
-          CLIFF_CONFIG="${{ github.action_path }}/cliff.toml"
+          cp "${{ github.action_path }}/cliff.toml" /tmp/cliff.toml
         fi
+
+        # Inject the consumer's repo URL into the config placeholder
+        sed -i.bak "s|<REPO>|https://github.com/$REPO|g" /tmp/cliff.toml
+        rm -f /tmp/cliff.toml.bak
 
         # Generate notes for this specific release
         if [ -n "$LAST_TAG" ]; then
-          git-cliff --config "$CLIFF_CONFIG" "$LAST_TAG..HEAD" --strip header --output /tmp/notes.md
+          git-cliff --config /tmp/cliff.toml "$LAST_TAG..HEAD" --strip header --output /tmp/notes.md
         else
-          git-cliff --config "$CLIFF_CONFIG" --strip header --output /tmp/notes.md
+          git-cliff --config /tmp/cliff.toml --strip header --output /tmp/notes.md
         fi
-
-        # Add markdown links to pull requests
-        sed -i -E "s|\\(\\#([0-9]+)\\)|([#\\1](https://github.com/$REPO/pull/\\1))|g" /tmp/notes.md
 
         echo "Notes generated:"
         cat /tmp/notes.md
@@ -186,16 +187,17 @@ runs:
 
         # Use repo's cliff.toml if present; otherwise fall back to the action's default
         if [ -f cliff.toml ]; then
-          CLIFF_CONFIG="cliff.toml"
+          cp cliff.toml /tmp/cliff.toml
         else
-          CLIFF_CONFIG="${{ github.action_path }}/cliff.toml"
+          cp "${{ github.action_path }}/cliff.toml" /tmp/cliff.toml
         fi
 
-        # Generate unified changelog since base version (calver tags ignored)
-        git-cliff --config "$CLIFF_CONFIG" "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
+        # Inject the consumer's repo URL into the config placeholder
+        sed -i.bak "s|<REPO>|https://github.com/$REPO|g" /tmp/cliff.toml
+        rm -f /tmp/cliff.toml.bak
 
-        # Add markdown links to pull requests
-        sed -i -E "s|\\(\\#([0-9]+)\\)|([#\\1](https://github.com/$REPO/pull/\\1))|g" /tmp/new_section.md
+        # Generate unified changelog since base version (calver tags ignored)
+        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
 
         # Build the new top section with versioned heading and user section
         {
@@ -203,8 +205,7 @@ runs:
           echo ""
           echo "$USER_SECTION"
           echo ""
-          # Skip the first line (## [unreleased]) from git-cliff output
-          tail -n +2 /tmp/new_section.md
+          cat /tmp/new_section.md
         } > /tmp/top_section.md
 
         # Get existing changelog body (skip header and old draft section for this version)
@@ -237,7 +238,7 @@ runs:
 
         # Create blob for CHANGELOG.md
         BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
-          -f content="$(base64 -w0 CHANGELOG.md)" \
+          -f content="$(base64 CHANGELOG.md | tr -d '\n')" \
           -f encoding="base64" \
           --jq '.sha')
 
@@ -299,7 +300,7 @@ runs:
         # Create draft PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
         if [ "$PR_EXISTS" = "0" ]; then
-          PR_BODY=$(printf 'Accumulated changes since %s.\n\nEdit the section between `\u003c!-- USER-EDITABLE SECTION --\u003e` markers in CHANGELOG.md and bump package.json when ready for the next base release.' "$BASE_TAG")
+          PR_BODY=$(printf 'Accumulated changes since %s.\n\nEdit the section between `<!-- USER-EDITABLE SECTION -->` markers in CHANGELOG.md and bump package.json when ready for the next base release.' "$BASE_TAG")
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
