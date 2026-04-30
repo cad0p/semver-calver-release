@@ -40,6 +40,8 @@ All notable changes to this project will be documented in this file.
 
 - Use previous base tag for changelog range ([#116](https://github.com/cad0p/semver-calver-release/pull/116))
 
+- Compare against main package.json for heading decision ([#118](https://github.com/cad0p/semver-calver-release/pull/118))
+
 
 ## [1.1.0] - 2026-04-30
 
