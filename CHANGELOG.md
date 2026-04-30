@@ -46,3 +46,4 @@ All notable changes to this project will be documented in this file.
 - Trigger clean release (#12)
 - Trigger release (#19)
 - Trigger release to test draft PR creation (#21)
+- Trigger second release to test commit accumulation (#31)
