@@ -38,54 +38,14 @@ This prevents duplicate draft sections and ensures the release date matches the 
 
 ## Usage
 
-Add a single workflow file to your repo:
+See [`/examples`](./examples) for ready-to-use workflow setups.
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
+| Example | Best for |
+|---------|----------|
+| [`minimal`](./examples/minimal) | Solo projects, always auto-release, no curation |
+| [`basic-npm-package`](./examples/basic-npm-package) | Teams, curated changelogs, npm publishing |
 
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
-
-jobs:
-  validate:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: cad0p/semver-calver-release/validate-version@v1
-
-  release:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.release.outputs.version }}
-      has_changes: ${{ steps.release.outputs.has_changes }}
-    steps:
-      - id: release
-        uses: cad0p/semver-calver-release/release@v1
-
-  publish:
-    needs: release
-    if: github.event_name == 'push' && needs.release.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: cad0p/semver-calver-release/npm-publish@v1
-        with:
-          tag: v${{ needs.release.outputs.version }}
-```
-
-That's it. No other workflow files needed.
+Most teams should start with [`basic-npm-package`](./examples/basic-npm-package).
 
 ## How it works
 
@@ -141,12 +101,12 @@ Your custom config is applied **before** PR link injection, so you don't need to
 
 ## Actions
 
-### `validate-version`
+### `validate-package-version`
 
-Validates `package.json` version format on pull requests.
+Validates `package.json` version format and prevents accidental version bumps on feature branches.
 
 ```yaml
-- uses: cad0p/semver-calver-release/validate-version@v1
+- uses: cad0p/semver-calver-release/validate-package-version@v1
 ```
 
 ### `release`
