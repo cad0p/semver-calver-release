@@ -19,14 +19,17 @@ runs:
           exit 0
         fi
         
-        BASE_VERSION=$(echo "$BRANCH" | sed 's/^release\/v//')
         CURRENT_VERSION=$(jq -r '.version' package.json)
         
-        echo "Base version: $BASE_VERSION"
+        # Get the last released base version from main's package.json
+        MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "0.0.0")
+        MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
+        
+        echo "Last released base version: $MAIN_BASE"
         echo "Current version: $CURRENT_VERSION"
         
-        if [ "$CURRENT_VERSION" = "$BASE_VERSION" ]; then
-          echo "::error::package.json version ($CURRENT_VERSION) must be bumped from base version ($BASE_VERSION)"
+        if [ "$CURRENT_VERSION" = "$MAIN_BASE" ]; then
+          echo "::error::package.json version ($CURRENT_VERSION) must be bumped from the last released base version ($MAIN_BASE)"
           echo "::error::Edit package.json to set the next release version before merging"
           exit 1
         fi
