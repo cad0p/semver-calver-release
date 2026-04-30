@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Remove trigger file (#96)
 - Test no duplicate sections (#98)
 - Remove test file (#100)
+- Remove CLEAN2.md (#101)
 
 ## [1.1.0] - 2026-04-30
 
