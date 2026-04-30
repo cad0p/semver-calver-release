@@ -61,3 +61,4 @@ This release introduces automated changelog management via git-cliff, signed com
 - Trigger release to verify user content preservation (#41)
 - Trigger final release test (#43)
 - Trigger release to test PR body formatting (#46)
+- Trigger release to test PR marker rendering (#49)
