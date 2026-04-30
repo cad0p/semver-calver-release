@@ -100,6 +100,18 @@ You can:
 
 **Note:** Auto-creating PRs requires enabling "Allow GitHub Actions to create and approve pull requests" in your repo settings (Settings → Actions → General). Without this, the branch is still maintained automatically — you'll just need to create the PR manually.
 
+## Customizing changelog format
+
+The release action uses [git-cliff](https://git-cliff.org) to generate changelogs. It looks for a `cliff.toml` in your repo root and falls back to a sensible default shipped with the action.
+
+To customize:
+
+1. Run `git-cliff --init` in your repo to generate a starting config
+2. Commit `cliff.toml` to your repo root
+3. The action will use your config instead of the default
+
+Your custom config is applied **before** PR link injection, so you don't need to include the postprocessor for markdown links — the action adds those automatically.
+
 ## Actions
 
 ### `validate-version`
