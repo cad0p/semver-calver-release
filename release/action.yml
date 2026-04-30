@@ -80,12 +80,33 @@ runs:
         VERSION="${{ steps.version.outputs.version }}"
         TAG="v$VERSION"
         LAST_TAG="${{ steps.changes.outputs.last_tag }}"
+        REPO="${{ github.repository }}"
+
+        # Use repo's cliff.toml if present; otherwise create a temp one with PR link postprocessor
+        if [ -f cliff.toml ]; then
+          CLIFF_CONFIG="cliff.toml"
+        else
+          CLIFF_CONFIG="/tmp/cliff.toml"
+          cat > "$CLIFF_CONFIG" << EOF
+        [changelog]
+        header = ""
+        trim = true
+        postprocessors = [
+          { pattern = '\\(#(\\d+)\\)', replace = "([#\${1}](https://github.com/$REPO/pull/\${1}))" }
+        ]
+
+        [git]
+        conventional_commits = true
+        filter_unconventional = true
+        tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+        EOF
+        fi
 
         # Generate notes for this specific release
         if [ -n "$LAST_TAG" ]; then
-          git-cliff "$LAST_TAG..HEAD" --strip header --output /tmp/notes.md
+          git-cliff --config "$CLIFF_CONFIG" "$LAST_TAG..HEAD" --strip header --output /tmp/notes.md
         else
-          git-cliff --strip header --output /tmp/notes.md
+          git-cliff --config "$CLIFF_CONFIG" --strip header --output /tmp/notes.md
         fi
 
         echo "Notes generated:"
@@ -173,20 +194,28 @@ runs:
           USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->'
         fi
 
-        # Create git-cliff config that ignores calver tags
-        cat > /tmp/cliff.toml << 'EOF'
+        # Use repo's cliff.toml if present; otherwise create a temp one with PR link postprocessor
+        if [ -f cliff.toml ]; then
+          CLIFF_CONFIG="cliff.toml"
+        else
+          CLIFF_CONFIG="/tmp/cliff.toml"
+          cat > "$CLIFF_CONFIG" << EOF
         [changelog]
         header = ""
         trim = true
+        postprocessors = [
+          { pattern = '\\(#(\\d+)\\)', replace = "([#\${1}](https://github.com/$REPO/pull/\${1}))" }
+        ]
 
         [git]
         conventional_commits = true
         filter_unconventional = true
         tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
         EOF
+        fi
 
         # Generate unified changelog since base version (calver tags ignored)
-        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
+        git-cliff --config "$CLIFF_CONFIG" "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
 
         # Build the new top section with versioned heading and user section
         {
