@@ -23,6 +23,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Add validate-package-version action\n\nReplaces validate-version with clearer semantics:\n- On feature branches: blocks package.json version changes (must match main)\n- On release branches: validates version format only\n- Prevents accidental version bumps outside the release workflow ([#134](https://github.com/cad0p/semver-calver-release/pull/134))
 
+- Calver releases are prereleases, floating tags only on base releases\n\n- Calver releases marked as --prerelease on GitHub (not --latest)\n- Base releases remain --latest stable releases\n- Floating tags (v1, v1.x) only update on base releases\n- Consumers pinning to @v1 always get stable base releases\n- README updated to document the new behavior ([#138](https://github.com/cad0p/semver-calver-release/pull/138))
+
 
 ### 🐛 Bug Fixes
 
