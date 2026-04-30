@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-04-30
+
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. This section is preserved across calver releases. -->
+<!-- USER-EDITABLE SECTION END -->
+
+
+### 🚀 Features
+
+- Auto-rebase release branch on main when behind (#67)
+- Conflict-aware auto-rebase for draft PR branches (#71)
+
+### 🐛 Bug Fixes
+
+- Remove harmful auto-rebase that silently overwrites main changes (#70)
+- Use cliff.toml with tag_pattern to ignore calver tags in changelog generation (#76)
+- Use JSON input for rebase ref update (boolean force) (#79)
+- Use actual newlines in default user section, strip header from old body (#82)
+- Fetch rebased commit so git show works locally (#85)
+- Ensure OIDC trusted publishing by removing explicit auth tokens (#88)
+- Remove auto-rebase, just accumulate on branch tip (#89)
+- Use OIDC token for npm trusted publishing (#93)
+- Use index() for literal string match in awk (regex chars in version) (#97)
+
+### ⚙️ Miscellaneous Tasks
+
+- Trigger release to test auto-rebase (#69)
+- Modify CHANGELOG.md to test conflict detection (#72)
+- Trigger release after CHANGELOG.md conflict (#73)
+- Remove conflict test files (#74)
+- Clean up CHANGELOG.md and remove RELEASE_SUMMARY.md (#75)
+- Trigger release to test clean changelog generation (#77)
+- Final test of clean changelog generation (#78)
+- Verify rebase boolean fix (#81)
+- Verify clean changelog generation (#83)
+- Final verify of changelog generation (#86)
+- Test clean accumulate without rebase (#90)
+- Remove test verification files (#92)
+- Trigger clean draft PR (#95)
+- Remove trigger file (#96)
+
 ## [1.1.0] - 2026-04-30
 
 ### 🚀 Features
