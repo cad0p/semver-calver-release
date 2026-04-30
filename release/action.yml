@@ -213,7 +213,7 @@ runs:
         # Build conventional commit message for this changelog update
         LAST_TAG="${{ steps.changes.outputs.last_tag }}"
         if [ -n "$LAST_TAG" ]; then
-          COMMIT_MSG="docs(changelog): changes between $LAST_TAG and v$VERSION"
+          COMMIT_MSG="docs(changelog): changes from $LAST_TAG to v$VERSION"
         else
           COMMIT_MSG="docs(changelog): initial changelog"
         fi
@@ -246,11 +246,17 @@ runs:
         # Create draft PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
         if [ "$PR_EXISTS" = "0" ]; then
+          PR_BODY=$(cat <<EOF
+Accumulated changes since $BASE_TAG.
+
+Edit the section between \`<!-- USER-EDITABLE SECTION -->\` markers in CHANGELOG.md and bump package.json when ready for the next base release.
+EOF
+)
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
             --title "chore(release): v<VERSION>" \
-            --body "Accumulated changes since $BASE_TAG.\n\nEdit the section between \`<!-- USER-EDITABLE SECTION -->\` markers in CHANGELOG.md and bump package.json when ready for the next base release." \
+            --body "$PR_BODY" \
             --draft 2>/tmp/pr_error; then
             ERROR=$(cat /tmp/pr_error)
             if echo "$ERROR" | grep -q "not permitted to create or approve pull requests"; then
