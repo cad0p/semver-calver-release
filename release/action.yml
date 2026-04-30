@@ -183,7 +183,8 @@ runs:
         fi
 
         # Read current package.json version from the branch (user may have bumped it)
-        CURRENT_VERSION=$(jq -r '.version' package.json)
+        git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
+        CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
         TODAY=$(date -u +%Y-%m-%d)
 
         # Replace [unreleased] with actual version from package.json
@@ -250,8 +251,7 @@ runs:
           gh api "repos/$REPO/git/refs" --input /tmp/ref.json
         fi
 
-        # Update PR title to match current package.json version
-        CURRENT_VERSION=$(jq -r '.version' package.json)
+        # Update PR title to match current package.json version (from branch)
         PR_NUMBER=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
         if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
           gh pr edit "$PR_NUMBER" --title "chore(release): v$CURRENT_VERSION" 2>/dev/null || true
