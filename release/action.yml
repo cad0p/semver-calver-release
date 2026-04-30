@@ -119,6 +119,23 @@ runs:
         TAG="v$VERSION"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
+        # For base releases: add date to CHANGELOG heading before tagging
+        if [ "$IS_CALVER" != "true" ] && [ -f CHANGELOG.md ]; then
+          TODAY=$(date -u +%Y-%m-%d)
+          # Limit to first match, tolerate trailing whitespace, escape dots in version
+          sed -i.bak "0,/^## \[${VERSION//./\.}\][[:space:]]*$/s//## [$VERSION] - $TODAY/" CHANGELOG.md
+          rm -f CHANGELOG.md.bak
+          git add CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "docs(changelog): add release date for v$VERSION"
+            git push origin HEAD
+          else
+            echo "CHANGELOG.md heading already has date or was not found — skipping date commit"
+          fi
+        fi
+
         git tag "$TAG"
         git push origin "$TAG"
 
@@ -186,16 +203,15 @@ runs:
         # Read current package.json version from the branch (user may have bumped it)
         git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
-        TODAY=$(date -u +%Y-%m-%d)
 
         # For heading comparison, use main's package.json as the "base" version
         # (the release branch may have been bumped ahead by the user)
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "$BASE_VERSION")
         MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
 
-        # Determine heading based on whether version was bumped from main
+        # Draft headings are dateless — date is added at release time on main
         if [ "$CURRENT_VERSION" != "$MAIN_BASE" ]; then
-          DRAFT_HEADING="## [$CURRENT_VERSION] - $TODAY"
+          DRAFT_HEADING="## [$CURRENT_VERSION]"
         else
           DRAFT_HEADING="## [calver-released]"
         fi
