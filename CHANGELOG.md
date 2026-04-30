@@ -39,6 +39,7 @@ This release introduces automated changelog management via git-cliff, signed com
 - Use quoted string with actual newlines for PR body (#40)
 - Use $'...' bash syntax for PR body newlines (#42)
 - Use printf for PR body newlines (#44)
+- Remove literal backslash escapes from PR body (#47)
 
 ### 📚 Documentation
 
