@@ -36,10 +36,7 @@ All notable changes to this project will be documented in this file.
 
 - Run release action on release/* branches, skip tag/release there ([#114](https://github.com/cad0p/semver-calver-release/pull/114))
 
-
-### ⚙️ Miscellaneous Tasks
-
-- Test trigger on new release branch
+- Always update draft PR on release branches regardless of calver/base ([#115](https://github.com/cad0p/semver-calver-release/pull/115))
 
 
 ## [1.1.0] - 2026-04-30
