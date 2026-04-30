@@ -15,3 +15,4 @@ This release introduces automated changelog management via git-cliff, signed com
 ### ⚙️ Miscellaneous Tasks
 
 - Trigger release to test versioned changelog (#51)
+- Remove trigger test files (#53)
