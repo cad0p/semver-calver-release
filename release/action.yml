@@ -149,6 +149,16 @@ runs:
         git tag -f "v$MAJOR_MINOR"
         git push origin "v$MAJOR_MINOR" --force
 
+        # For base releases: add date to CHANGELOG heading before tagging
+        if [ "$IS_CALVER" != "true" ] && [ -f CHANGELOG.md ]; then
+          TODAY=$(date -u +%Y-%m-%d)
+          sed -i.bak "s/^## \[$VERSION\]$/## [$VERSION] - $TODAY/" CHANGELOG.md
+          rm -f CHANGELOG.md.bak
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): add release date for v$VERSION"
+          git push origin HEAD
+        fi
+
         # For base releases: use curated CHANGELOG.md if available
         # For calver: use git-cliff generated notes
         if [ "$IS_CALVER" = "true" ] || [ ! -f CHANGELOG.md ]; then
