@@ -34,6 +34,7 @@ All notable changes to this project will be documented in this file.
 - Use heredoc for multiline string in YAML (#28)
 - Escape newlines in default user section (#29)
 - Conventional commit style for PR title and changelog commits (#32)
+- Exclude floating tags from last_tag detection (#34)
 
 ### 📚 Documentation
 
