@@ -64,6 +64,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Keep all ## [ headings from main, only skip header lines ([#132](https://github.com/cad0p/semver-calver-release/pull/132))
 
+- Skip bot commit when changelog is unchanged ([#136](https://github.com/cad0p/semver-calver-release/pull/136))
+
 
 ### 🚜 Refactor
 
