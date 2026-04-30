@@ -1,6 +1,6 @@
 {
   "name": "semver-calver-release",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Reusable GitHub Actions for hybrid SemVer+CalVer versioning and npm publishing.",
   "keywords": [
     "github-actions",
