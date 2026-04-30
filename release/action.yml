@@ -123,8 +123,15 @@ runs:
         if [ "$IS_CALVER" != "true" ] && [ -f CHANGELOG.md ]; then
           TODAY=$(date -u +%Y-%m-%d)
           # Limit to first match, tolerate trailing whitespace, escape dots in version
-          sed -i.bak "0,/^## \[${VERSION//./\.}\][[:space:]]*$/s//## [$VERSION] - $TODAY/" CHANGELOG.md
-          rm -f CHANGELOG.md.bak
+          if command -v perl >/dev/null 2>&1; then
+            PERL_VERSION="$VERSION" PERL_TODAY="$TODAY" perl -i -pe 'if (!$done && /^## \[\Q$ENV{PERL_VERSION}\E\][[:space:]]*$/) { $_ = "## [$ENV{PERL_VERSION}] - $ENV{PERL_TODAY}\n"; $done = 1; }' CHANGELOG.md
+          else
+            ESCAPED_VER=$(echo "$VERSION" | sed 's/\./\\./g')
+            LINE=$(awk -v ver="$ESCAPED_VER" '$0 ~ "^## \\\\[" ver "][[:space:]]*$" { print NR; exit }' CHANGELOG.md)
+            if [ -n "$LINE" ]; then
+              sed -e "${LINE}s/.*/## [$VERSION] - $TODAY/" CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+            fi
+          fi
           git add CHANGELOG.md
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
@@ -149,16 +156,6 @@ runs:
         git tag -f "v$MAJOR_MINOR"
         git push origin "v$MAJOR_MINOR" --force
 
-        # For base releases: add date to CHANGELOG heading before tagging
-        if [ "$IS_CALVER" != "true" ] && [ -f CHANGELOG.md ]; then
-          TODAY=$(date -u +%Y-%m-%d)
-          sed -i.bak "s/^## \[$VERSION\]$/## [$VERSION] - $TODAY/" CHANGELOG.md
-          rm -f CHANGELOG.md.bak
-          git add CHANGELOG.md
-          git commit -m "docs(changelog): add release date for v$VERSION"
-          git push origin HEAD
-        fi
-
         # For base releases: use curated CHANGELOG.md if available
         # For calver: use git-cliff generated notes
         if [ "$IS_CALVER" = "true" ] || [ ! -f CHANGELOG.md ]; then
@@ -181,7 +178,7 @@ runs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         BASE_VERSION="${{ steps.version.outputs.base_version }}"
-        
+
         # Determine changelog range start and branch name from main's package.json
         # (source of truth for what's released — the draft accumulates since last release)
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "0.0.0")
@@ -214,6 +211,9 @@ runs:
         git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
 
+        # Fallback for commit message when version step didn't run
+        [ -z "$VERSION" ] && VERSION="$CURRENT_VERSION"
+
         # For heading comparison, use main's package.json as the "base" version
         # (the release branch may have been bumped ahead by the user)
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "$BASE_VERSION")
@@ -226,22 +226,21 @@ runs:
           DRAFT_HEADING="## [calver-released]"
         fi
 
-        # Base bump: start fresh. Calver: preserve existing user section.
-        if [ "$CURRENT_VERSION" != "$MAIN_BASE" ]; then
+        # Extract user section from branch's first unreleased section
+        USER_SECTION=""
+        if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/branch_changelog.md 2>/dev/null; then
+          USER_SECTION=$(awk '
+            /^## \[/ {
+              section++
+              # Unreleased sections have no date suffix: ## [X.Y.Z]
+              if (section == 1 && $0 ~ /^## \[[^\]]+\][[:space:]]*$/) { unreleased = 1 }
+            }
+            section == 1 && unreleased && /<!-- USER-EDITABLE SECTION START -->/ { found = 1 }
+            section == 1 && unreleased && found { print; if (/USER-EDITABLE SECTION END/) exit }
+          ' /tmp/branch_changelog.md)
+        fi
+        if [ -z "$USER_SECTION" ]; then
           USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. -->\n<!-- USER-EDITABLE SECTION END -->'
-        else
-          USER_SECTION=""
-          if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/existing_changelog.md 2>/dev/null; then
-            # Extract user section from the first ## [ section (top draft)
-            USER_SECTION=$(awk '
-              /^## \[/ { section++ }
-              section == 1 && /<!-- USER-EDITABLE SECTION START -->/ { found=1 }
-              section == 1 && found { print; if(/USER-EDITABLE SECTION END/) exit }
-            ' /tmp/existing_changelog.md)
-          fi
-          if [ -z "$USER_SECTION" ]; then
-            USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. -->\n<!-- USER-EDITABLE SECTION END -->'
-          fi
         fi
 
         # Use repo's cliff.toml if present; otherwise fall back to the action's default
@@ -255,9 +254,9 @@ runs:
         sed -i.bak "s|<REPO>|https://github.com/$REPO|g" /tmp/cliff.toml
         rm -f /tmp/cliff.toml.bak
 
-        # Generate unified changelog since last released base version
+        # Generate changelog section from main commits only (ignore any branch-only commits)
         if [ -n "$RANGE_START" ]; then
-          git-cliff --config /tmp/cliff.toml "$RANGE_START..HEAD" --strip header --output /tmp/new_section.md
+          git-cliff --config /tmp/cliff.toml "$RANGE_START..origin/main" --strip header --output /tmp/new_section.md
         else
           git-cliff --config /tmp/cliff.toml --strip header --output /tmp/new_section.md
         fi
@@ -271,33 +270,19 @@ runs:
           cat /tmp/new_section.md
         } > /tmp/top_section.md
 
-        # Get existing changelog body: skip header and the FIRST ## [ section if it's a draft
-        if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
-          # Detect if first ## [ section is a draft (calver-released, unreleased, or no date)
-          FIRST_HEADING=$(awk '/^## \[/ { print; exit }' /tmp/old_changelog.md)
-          if echo "$FIRST_HEADING" | grep -qE '\[calver-released\]|\[unreleased\]|^## \[[^]]+\]$'; then
-            # First section is a draft — skip it
-            awk '
-              BEGIN { in_header=1; skip=0 }
-              /^## \[/ {
-                if (in_header) { in_header=0; skip=1; next }
-              }
-              skip && /^## \[/ { skip=0 }
-              !in_header && !skip { print }
-            ' /tmp/old_changelog.md > /tmp/old_body.md
-          else
-            # First section is finalized — keep everything below header
-            awk '
-              BEGIN { in_header=1 }
-              /^## \[/ { in_header=0 }
-              !in_header { print }
-            ' /tmp/old_changelog.md > /tmp/old_body.md
-          fi
+        # Historical body comes from main (source of truth for finalized sections)
+        if git show origin/main:CHANGELOG.md >/tmp/main_changelog.md 2>/dev/null; then
+          # Skip header and first section from main (it may be a dated finalized section)
+          awk '
+            BEGIN { in_header = 1 }
+            /^## \[/ { in_header = 0; next }
+            !in_header { print }
+          ' /tmp/main_changelog.md > /tmp/historical_body.md
         else
-          > /tmp/old_body.md
+          > /tmp/historical_body.md
         fi
 
-        # Combine: header + new draft + everything below old draft
+        # Combine: header + new draft + historical body from main
         {
           echo "# Changelog"
           echo ""
@@ -305,7 +290,7 @@ runs:
           echo ""
           cat /tmp/top_section.md
           echo ""
-          cat /tmp/old_body.md
+          cat /tmp/historical_body.md
         } > CHANGELOG.md
 
         # Create blob for CHANGELOG.md
