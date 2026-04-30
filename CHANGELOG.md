@@ -18,6 +18,7 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 ### 🚀 Features
 
 - Add PR links in changelog via cliff.toml postprocessor ([#102](https://github.com/cad0p/semver-calver-release/pull/102))
+- Ship default cliff.toml with action, allow consumer override ([#104](https://github.com/cad0p/semver-calver-release/pull/104))
 
 ## [1.1.0] - 2026-04-30
 
