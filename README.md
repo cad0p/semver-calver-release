@@ -101,18 +101,18 @@ Every push to `main` that changes code triggers:
 
 ### Base releases (manual, curated)
 
-When you want to bump the base version (e.g. `1.0.0` → `1.1.0`):
+When you want to bump the base version (e.g. `1.1.2` → `1.1.3`):
 
-1. **Find the draft PR** (e.g. `release/v1.0.0`) — it contains accumulated changelogs since the last base release
+1. **Find the draft PR** on `release/v1.1.2` — it contains accumulated changelogs since `v1.1.2` was released
 2. **Edit CHANGELOG.md** on that branch to add your preamble/notes between the `<!-- USER-EDITABLE SECTION -->` markers
-3. **Bump `package.json`** version to `1.1.0`
-4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped before merging
-5. The merge triggers `v1.1.0` release using your curated CHANGELOG.md
+3. **Bump `package.json`** version to `1.1.3`
+4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped and no unexpected files are present
+5. The merge triggers `v1.1.3` release using your curated CHANGELOG.md
 
 
 ### Draft changelog PRs
 
-After the first calver release following a base release, a branch like `release/v1.0.0` is maintained with accumulated changelogs.
+After the first calver release following a base release, a branch like `release/v1.1.2` is maintained with accumulated changelogs.
 
 **How it works:**
 - The draft heading uses the current `package.json` version (e.g. `## [1.1.3]`) when bumped, or `[calver-released]` when still accumulating
