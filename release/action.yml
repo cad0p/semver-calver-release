@@ -162,10 +162,10 @@ runs:
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
         TODAY=$(date -u +%Y-%m-%d)
 
-        # Extract user-editable section from existing branch CHANGELOG.md
+        # Extract first user-editable section from existing branch CHANGELOG.md
         USER_SECTION=""
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/existing_changelog.md 2>/dev/null; then
-          USER_SECTION=$(awk '/<!-- USER-EDITABLE SECTION START -->/,/<!-- USER-EDITABLE SECTION END -->/' /tmp/existing_changelog.md)
+          USER_SECTION=$(awk '/<!-- USER-EDITABLE SECTION START -->/{found=1} found{print; if(/USER-EDITABLE SECTION END/) exit}' /tmp/existing_changelog.md)
         fi
 
         if [ -z "$USER_SECTION" ]; then
