@@ -205,7 +205,7 @@ runs:
         fi
 
         if [ -z "$USER_SECTION" ]; then
-          USER_SECTION="<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->"
+          USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->'
         fi
 
         # Create git-cliff config that ignores calver tags
@@ -233,10 +233,13 @@ runs:
           tail -n +2 /tmp/new_section.md
         } > /tmp/top_section.md
 
-        # Get existing changelog body (skip the old draft section for this version)
+        # Get existing changelog body (skip header and old draft section for this version)
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/old_changelog.md 2>/dev/null; then
-          # Skip everything from ## [CURRENT_VERSION] until the next ## [ or end
+          # First skip the header (lines before first ## [), then skip the draft section for CURRENT_VERSION
           awk -v ver="## [$CURRENT_VERSION]" '
+            BEGIN { in_header=1 }
+            /^## \[/ { in_header=0 }
+            in_header { next }
             $0 ~ ver { skip=1; next }
             skip && /^## \[/ { skip=0 }
             !skip { print }
