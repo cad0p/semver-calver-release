@@ -42,6 +42,19 @@ runs:
           exit 0
         fi
 
+        # actions/setup-node writes an auth token to .npmrc when NODE_AUTH_TOKEN
+        # is set as a repository secret. This blocks npm's OIDC trusted publishing.
+        # Remove any explicit token so npm falls back to the GitHub Actions OIDC flow.
+        npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
+        NPMRC="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+        if [ -f "$NPMRC" ]; then
+          sed -i '/registry.npmjs.org.*_authToken/d' "$NPMRC" 2>/dev/null || true
+        fi
+        # Clear the dummy token from the environment so npm uses OIDC
+        echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+        unset NODE_AUTH_TOKEN
+        echo "Cleared explicit npm auth tokens for OIDC publishing"
+
         if echo "$VERSION" | grep -q '-'; then
           npm publish --access public --tag next
         else
