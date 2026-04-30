@@ -2,16 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [calver-released]
+## [1.1.3] - 2026-04-30
 
 <!-- USER-EDITABLE SECTION START -->
-This release improves the draft changelog PR workflow, fixes several edge cases in changelog generation, and adds OIDC-based npm trusted publishing.
-
-**Highlights:**
-- Draft changelog PRs now accumulate commits cleanly on the branch tip without auto-rebase artifacts
-- Fixed duplicate section bug when version strings contain regex characters
-- Changelog generation properly ignores calver tags and uses `index()` for literal matching
-- npm publishing uses OIDC trusted publishing (no explicit tokens required)
+<!-- Add your curated release notes here. -->
 <!-- USER-EDITABLE SECTION END -->
 
 
@@ -41,6 +35,11 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 - Auto-manage draft heading, start fresh on base bump, remove heading validation ([#113](https://github.com/cad0p/semver-calver-release/pull/113))
 
 - Run release action on release/* branches, skip tag/release there ([#114](https://github.com/cad0p/semver-calver-release/pull/114))
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Test trigger on new release branch
 
 
 ## [1.1.0] - 2026-04-30
