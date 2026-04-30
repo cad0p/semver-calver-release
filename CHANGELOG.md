@@ -11,3 +11,7 @@ This release introduces automated changelog management via git-cliff, signed com
 ### 🚀 Features
 
 - Versioned changelog headings, dynamic PR titles, release PR validation (#50)
+
+### ⚙️ Miscellaneous Tasks
+
+- Trigger release to test versioned changelog (#51)
