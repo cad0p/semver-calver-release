@@ -72,6 +72,11 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 - Use origin/main as source of truth for changelog body ([#130](https://github.com/cad0p/semver-calver-release/pull/130))
 
 
+### 📚 Documentation
+
+- Update README for dateless drafts and origin/main source of truth ([#133](https://github.com/cad0p/semver-calver-release/pull/133))
+
+
 ### ⚙️ Miscellaneous Tasks
 
 - Test calver release on main ([#125](https://github.com/cad0p/semver-calver-release/pull/125))
