@@ -182,11 +182,18 @@ runs:
           USER_SECTION="<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. This section is preserved across calver releases. -->\n<!-- USER-EDITABLE SECTION END -->"
         fi
 
-        # Merge: insert user section after ## [unreleased] header
+        # Read current package.json version from the branch (user may have bumped it)
+        CURRENT_VERSION=$(jq -r '.version' package.json)
+        TODAY=$(date -u +%Y-%m-%d)
+
+        # Replace [unreleased] with actual version from package.json
+        sed "s/## \[unreleased\]/## [$CURRENT_VERSION] - $TODAY/" /tmp/auto_changelog.md > /tmp/versioned_changelog.md
+
+        # Merge: insert user section after versioned header
         awk -v user="$USER_SECTION" '
-          /^## \[unreleased\]/ { print; print ""; print user; print ""; next }
+          /^## \[/ { print; print ""; print user; print ""; next }
           { print }
-        ' /tmp/auto_changelog.md > CHANGELOG.md
+        ' /tmp/versioned_changelog.md > CHANGELOG.md
 
         # Create blob for CHANGELOG.md
         BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
@@ -243,6 +250,13 @@ runs:
           gh api "repos/$REPO/git/refs" --input /tmp/ref.json
         fi
 
+        # Update PR title to match current package.json version
+        CURRENT_VERSION=$(jq -r '.version' package.json)
+        PR_NUMBER=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
+        if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+          gh pr edit "$PR_NUMBER" --title "chore(release): v$CURRENT_VERSION" 2>/dev/null || true
+        fi
+
         # Create draft PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
         if [ "$PR_EXISTS" = "0" ]; then
@@ -250,7 +264,7 @@ runs:
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
-            --title "chore(release): v<VERSION>" \
+            --title "chore(release): v$CURRENT_VERSION" \
             --body "$PR_BODY" \
             --draft 2>/tmp/pr_error; then
             ERROR=$(cat /tmp/pr_error)
