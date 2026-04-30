@@ -14,22 +14,10 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 - npm publishing uses OIDC trusted publishing (no explicit tokens required)
 <!-- USER-EDITABLE SECTION END -->
 
+
 ### 🚀 Features
 
-- Auto-rebase release branch on main when behind (#67)
-- Conflict-aware auto-rebase for draft PR branches (#71)
-
-### 🐛 Bug Fixes
-
-- Remove harmful auto-rebase that silently overwrites main changes (#70)
-- Use cliff.toml with tag_pattern to ignore calver tags in changelog generation (#76)
-- Use JSON input for rebase ref update (boolean force) (#79)
-- Use actual newlines in default user section, strip header from old body (#82)
-- Fetch rebased commit so git show works locally (#85)
-- Ensure OIDC trusted publishing by removing explicit auth tokens (#88)
-- Remove auto-rebase, just accumulate on branch tip (#89)
-- Use OIDC token for npm trusted publishing (#93)
-- Use index() for literal string match in awk (regex chars in version) (#97)
+- Add PR links in changelog via cliff.toml postprocessor ([#102](https://github.com/cad0p/semver-calver-release/pull/102))
 
 ## [1.1.0] - 2026-04-30
 
