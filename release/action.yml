@@ -144,9 +144,6 @@ runs:
           exit 0
         fi
 
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git config user.name "github-actions[bot]"
-
         # Create git-cliff config that ignores calver tags for a unified changelog
         cat > /tmp/cliff.toml << 'EOF'
         [changelog]
@@ -159,17 +156,44 @@ runs:
         tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
         EOF
 
-        # Always rebuild draft branch from current main for a clean, mergeable history
-        git fetch origin main
-        git checkout origin/main
-        git checkout -B "$BRANCH"
-
         # Generate unified changelog since base version (calver tags ignored)
         git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --output CHANGELOG.md
 
-        git add CHANGELOG.md
-        git commit -m "docs: update CHANGELOG.md for upcoming $BASE_TAG release" || true
-        git push origin "$BRANCH" --force
+        # Use GitHub API to create a signed commit (like ghcommit-action)
+        # This creates a commit signed by GitHub's GPG key, satisfying required_signatures
+        REPO="${{ github.repository }}"
+        PARENT_SHA=$(git rev-parse origin/main)
+
+        # Create blob for CHANGELOG.md
+        BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
+          -f content="$(base64 -w0 CHANGELOG.md)" \
+          -f encoding="base64" \
+          --jq '.sha')
+
+        # Create tree
+        TREE_SHA=$(gh api "repos/$REPO/git/trees" \
+          -f base_tree="$PARENT_SHA" \
+          -f "tree[0][path]"="CHANGELOG.md" \
+          -f "tree[0][mode]"="100644" \
+          -f "tree[0][type]"="blob" \
+          -f "tree[0][sha]"="$BLOB_SHA" \
+          --jq '.sha')
+
+        # Create commit (signed by GitHub)
+        COMMIT_SHA=$(gh api "repos/$REPO/git/commits" \
+          -f message="docs: update CHANGELOG.md for upcoming $BASE_TAG release" \
+          -f tree="$TREE_SHA" \
+          -f "parents[]"="$PARENT_SHA" \
+          --jq '.sha')
+
+        # Create or update branch ref
+        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+          echo "Updating branch $BRANCH to $COMMIT_SHA"
+          gh api "repos/$REPO/git/refs/heads/$BRANCH" -X PATCH -f sha="$COMMIT_SHA" -f force=true
+        else
+          echo "Creating branch $BRANCH at $COMMIT_SHA"
+          gh api "repos/$REPO/git/refs" -f ref="refs/heads/$BRANCH" -f sha="$COMMIT_SHA"
+        fi
 
         # Create PR if it doesn't exist
         PR_EXISTS=$(gh pr list --head "$BRANCH" --json number --jq 'length')
