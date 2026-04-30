@@ -60,6 +60,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Only skip first ## [ heading when extracting historical body from main ([#131](https://github.com/cad0p/semver-calver-release/pull/131))
 
+- Keep all ## [ headings from main, only skip header lines ([#132](https://github.com/cad0p/semver-calver-release/pull/132))
+
 
 ### 🚜 Refactor
 
@@ -73,6 +75,7 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 - Test calver release on main ([#125](https://github.com/cad0p/semver-calver-release/pull/125))
 
 
+## [1.1.2] - 2026-04-30
 
 <!-- USER-EDITABLE SECTION START -->
 This release improves the draft changelog PR workflow, fixes several edge cases in changelog generation, and adds OIDC-based npm trusted publishing.
