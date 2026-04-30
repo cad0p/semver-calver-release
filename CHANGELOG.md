@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - Draft PR, accumulate commits, preserve user-editable section (#27)
 - Use heredoc for multiline string in YAML (#28)
 - Escape newlines in default user section (#29)
+- Conventional commit style for PR title and changelog commits (#32)
 
 ### 📚 Documentation
 
