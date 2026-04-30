@@ -35,6 +35,9 @@ This release introduces automated changelog management via git-cliff, signed com
 - Escape newlines in default user section (#29)
 - Conventional commit style for PR title and changelog commits (#32)
 - Exclude floating tags from last_tag detection (#34)
+- PR body newlines, shorter commit messages (#38)
+- Use quoted string with actual newlines for PR body (#40)
+- Use $'...' bash syntax for PR body newlines (#42)
 
 ### 📚 Documentation
 
@@ -52,3 +55,5 @@ This release introduces automated changelog management via git-cliff, signed com
 - Trigger release to test conventional commit style (#33)
 - Trigger release to test filtered last_tag (#35)
 - Trigger release to test new PR title (#36)
+- Trigger release to test user section preservation (#39)
+- Trigger release to verify user content preservation (#41)
