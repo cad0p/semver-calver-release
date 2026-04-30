@@ -25,29 +25,31 @@ The action maintains a **draft release PR** on a branch named after the **last r
 | **Push to `release/v1.1.2`** | Updates draft PR only (no tag/release) — for curating the next base release |
 | **Merge draft PR to `main`** | Triggers base release with curated CHANGELOG |
 
-### Draft headings are dateless
+### Draft headings include the current date
 
-Draft PR sections use `[calver-released]` or `[1.1.3]` **without dates**. The date is added automatically when the base release is tagged on `main`:
+Draft PR sections use `[calver-released]` when still accumulating, or `[1.1.3] - YYYY-MM-DD` when the version is bumped. The date is the current UTC date at the time of the last push to the branch (or when you mark the PR as **"Ready for review"**):
 
 ```markdown
-## [1.1.3]                    ← in draft PR (dateless)
-## [1.1.3] - 2026-04-30      ← after merge, before tagging
+## [1.1.3] - 2026-04-30      ← date added automatically on every update
 ```
 
-This prevents duplicate draft sections and ensures the release date matches the actual merge date.
+The date refreshes on each push so it stays current. The validation check ensures a dated heading is present before merge.
 
 ## Usage
 
-Add a single workflow file to your repo:
+Add two workflow files to your repo:
+
+### 1. Release workflow
 
 ```yaml
-# .github/workflows/ci.yml
-name: CI
+# .github/workflows/release.yml
+name: Auto Release
 
 on:
-  pull_request:
-    branches: [main]
   push:
+    branches: [main, 'release/*']
+  pull_request:
+    types: [ready_for_review]
     branches: [main]
 
 permissions:
@@ -56,14 +58,7 @@ permissions:
   id-token: write
 
 jobs:
-  validate:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: cad0p/semver-calver-release/validate-package-version@v1
-
   release:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release.outputs.version }}
@@ -71,10 +66,13 @@ jobs:
     steps:
       - id: release
         uses: cad0p/semver-calver-release/release@v1
+        with:
+          skip_release: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+          ref: ${{ github.head_ref || github.ref }}
 
   publish:
     needs: release
-    if: github.event_name == 'push' && needs.release.outputs.has_changes == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,7 +83,25 @@ jobs:
           tag: v${{ needs.release.outputs.version }}
 ```
 
-That's it. No other workflow files needed.
+### 2. Validation workflow
+
+```yaml
+# .github/workflows/validate-package-version.yml
+name: Validate Package Version
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cad0p/semver-calver-release/validate-package-version@v1
+```
 
 ## How it works
 
@@ -107,7 +123,7 @@ When you want to bump the base version (e.g. `1.1.2` → `1.1.3`):
 1. **Find the draft PR** on `release/v1.1.2` — it contains accumulated changelogs since `v1.1.2` was released
 2. **Edit CHANGELOG.md** on that branch to add your preamble/notes between the `<!-- USER-EDITABLE SECTION -->` markers
 3. **Bump `package.json`** version to `1.1.3`
-4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped and no unexpected files are present
+4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped, the date is present, and no unexpected files are present
 5. The merge triggers `v1.1.3` **base release** using your curated CHANGELOG.md — floating tags (`v1`, `v1.x`) are updated to this release
 
 
@@ -229,6 +245,8 @@ jobs:
 ```
 
 To **block merges** until validation passes, add `validate` as a required status check in your branch protection rules.
+
+
 
 ## Pinning
 

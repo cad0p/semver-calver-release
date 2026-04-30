@@ -6,6 +6,10 @@ inputs:
     description: 'Skip tag and release, only update draft PR'
     required: false
     default: 'false'
+  ref:
+    description: 'Git ref to checkout (defaults to github.ref)'
+    required: false
+    default: ''
 
 outputs:
   version:
@@ -21,6 +25,7 @@ runs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+        ref: ${{ inputs.ref || github.ref }}
 
     - name: Check for code changes since last tag
       id: changes
@@ -119,30 +124,6 @@ runs:
         TAG="v$VERSION"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
-        # For base releases: add date to CHANGELOG heading before tagging
-        if [ "$IS_CALVER" != "true" ] && [ -f CHANGELOG.md ]; then
-          TODAY=$(date -u +%Y-%m-%d)
-          # Limit to first match, tolerate trailing whitespace, escape dots in version
-          if command -v perl >/dev/null 2>&1; then
-            PERL_VERSION="$VERSION" PERL_TODAY="$TODAY" perl -i -pe 'if (!$done && /^## \[\Q$ENV{PERL_VERSION}\E\][[:space:]]*$/) { $_ = "## [$ENV{PERL_VERSION}] - $ENV{PERL_TODAY}\n"; $done = 1; }' CHANGELOG.md
-          else
-            ESCAPED_VER=$(echo "$VERSION" | sed 's/\./\\./g')
-            LINE=$(awk -v ver="$ESCAPED_VER" '$0 ~ "^## \\\\[" ver "][[:space:]]*$" { print NR; exit }' CHANGELOG.md)
-            if [ -n "$LINE" ]; then
-              sed -e "${LINE}s/.*/## [$VERSION] - $TODAY/" CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
-            fi
-          fi
-          git add CHANGELOG.md
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "docs(changelog): add release date for v$VERSION"
-            git push origin HEAD
-          else
-            echo "CHANGELOG.md heading already has date or was not found — skipping date commit"
-          fi
-        fi
-
         git tag "$TAG"
         git push origin "$TAG"
 
@@ -240,9 +221,11 @@ runs:
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "$BASE_VERSION")
         MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
 
-        # Draft headings are dateless — date is added at release time on main
+        # Draft headings always include current UTC date when version is bumped.
+        # This ensures the date stays fresh if commits are pushed days later.
+        TODAY=$(date -u +%Y-%m-%d)
         if [ "$CURRENT_VERSION" != "$MAIN_BASE" ]; then
-          DRAFT_HEADING="## [$CURRENT_VERSION]"
+          DRAFT_HEADING="## [$CURRENT_VERSION] - $TODAY"
         else
           DRAFT_HEADING="## [calver-released]"
         fi
@@ -254,7 +237,7 @@ runs:
             /^## \[/ {
               section++
               # Unreleased sections have no date suffix: ## [X.Y.Z]
-              if (section == 1 && $0 ~ /^## \[[^\]]+\][[:space:]]*$/) { unreleased = 1 }
+              if (section == 1 && $0 ~ /^## \[[^\]]+\]([[:space:]]*-[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2})?[[:space:]]*$/) { unreleased = 1 }
             }
             section == 1 && unreleased && /<!-- USER-EDITABLE SECTION START -->/ { found = 1 }
             section == 1 && unreleased && found { print; if (/USER-EDITABLE SECTION END/) exit }

@@ -3,6 +3,9 @@ name: Auto Release
 on:
   push:
     branches: [main, 'release/*']
+  pull_request:
+    types: [ready_for_review]
+    branches: [main]
 
 permissions:
   contents: write
@@ -19,4 +22,5 @@ jobs:
       - id: release
         uses: cad0p/semver-calver-release/release@main
         with:
-          skip_release: ${{ github.ref != 'refs/heads/main' }}
+          skip_release: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+          ref: ${{ github.head_ref || github.ref }}
