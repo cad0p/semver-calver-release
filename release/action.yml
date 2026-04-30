@@ -156,6 +156,14 @@ runs:
         BASE_VERSION="${{ steps.version.outputs.base_version }}"
         BASE_TAG="v$BASE_VERSION"
         BRANCH="release/$BASE_TAG"
+        
+        # Find the previous released base tag for changelog range
+        # If current base was already released, use it; otherwise find the one before
+        if git tag -l "$BASE_TAG" | grep -q .; then
+          RANGE_START="$BASE_TAG"
+        else
+          RANGE_START=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '1p' || echo "")
+        fi
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
         # On main: only maintain draft PR for calver releases.
@@ -215,8 +223,12 @@ runs:
         sed -i.bak "s|<REPO>|https://github.com/$REPO|g" /tmp/cliff.toml
         rm -f /tmp/cliff.toml.bak
 
-        # Generate unified changelog since base version (calver tags ignored)
-        git-cliff --config /tmp/cliff.toml "$BASE_TAG..HEAD" --strip header --output /tmp/new_section.md
+        # Generate unified changelog since last released base version
+        if [ -n "$RANGE_START" ]; then
+          git-cliff --config /tmp/cliff.toml "$RANGE_START..HEAD" --strip header --output /tmp/new_section.md
+        else
+          git-cliff --config /tmp/cliff.toml --strip header --output /tmp/new_section.md
+        fi
 
         # Build the top draft section
         {
