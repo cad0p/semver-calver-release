@@ -45,6 +45,11 @@ All notable changes to this project will be documented in this file.
 - Validate against main package.json instead of branch name ([#119](https://github.com/cad0p/semver-calver-release/pull/119))
 
 
+### 🚜 Refactor
+
+- Use main package.json for changelog range start ([#120](https://github.com/cad0p/semver-calver-release/pull/120))
+
+
 ## [1.1.0] - 2026-04-30
 
 ### 🚀 Features
