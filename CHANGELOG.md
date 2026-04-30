@@ -76,6 +76,8 @@ This release improves the draft changelog PR workflow, fixes several edge cases 
 
 - Update README for dateless drafts and origin/main source of truth ([#133](https://github.com/cad0p/semver-calver-release/pull/133))
 
+- Add /examples folder with minimal and basic-npm-package workflow setups ([#135](https://github.com/cad0p/semver-calver-release/pull/135))
+
 
 ### ⚙️ Miscellaneous Tasks
 
