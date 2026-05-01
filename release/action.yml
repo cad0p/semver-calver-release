@@ -227,7 +227,9 @@ runs:
 
         # Extract user section from branch's first unreleased section
         USER_SECTION=""
+        FIRST_HEADING_VERSION=""
         if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/branch_changelog.md 2>/dev/null; then
+          FIRST_HEADING_VERSION=$(awk '/^## \[/{gsub(/^## \[|\].*$/, ""); print; exit}' /tmp/branch_changelog.md)
           USER_SECTION=$(awk '
             /^## \[/ {
               section++
@@ -238,6 +240,18 @@ runs:
             section == 1 && unreleased && found { print; if (/USER-EDITABLE SECTION END/) exit }
           ' /tmp/branch_changelog.md)
         fi
+
+        # Defensive check: discard user section if it comes from a stale finalized release
+        if [ -n "$FIRST_HEADING_VERSION" ] && [ "$FIRST_HEADING_VERSION" != "calver-released" ]; then
+          if git tag -l "v$FIRST_HEADING_VERSION" | grep -q .; then
+            echo "Stale finalized section detected (v$FIRST_HEADING_VERSION already released) — discarding prefilled user section"
+            USER_SECTION=""
+          elif [ "$FIRST_HEADING_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "Heading version ($FIRST_HEADING_VERSION) mismatches branch package.json ($CURRENT_VERSION) — discarding prefilled user section"
+            USER_SECTION=""
+          fi
+        fi
+
         if [ -z "$USER_SECTION" ]; then
           USER_SECTION=$'<!-- USER-EDITABLE SECTION START -->\n<!-- Add your curated release notes here. -->\n<!-- USER-EDITABLE SECTION END -->'
         fi
