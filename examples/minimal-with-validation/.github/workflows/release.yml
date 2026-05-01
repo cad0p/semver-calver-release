@@ -11,11 +11,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.release.outputs.version }}
-      has_changes: ${{ steps.release.outputs.has_changes }}
     steps:
-      - id: release
-        uses: cad0p/semver-calver-release/release@main
+      - uses: cad0p/semver-calver-release/release@v1
         with:
           skip_release: ${{ github.ref != 'refs/heads/main' }}

@@ -27,81 +27,26 @@ The action maintains a **draft release PR** on a branch named after the **last r
 
 ### Draft headings include the current date
 
-Draft PR sections use `[calver-released]` when still accumulating, or `[1.1.3] - YYYY-MM-DD` when the version is bumped. The date is the current UTC date at the time of the last push to the branch (or when you mark the PR as **"Ready for review"**):
+Draft PR sections use `[calver-released]` when still accumulating, or `[1.1.3] - YYYY-MM-DD` when the version is bumped. The date is the current UTC date at the time of the last push to the branch:
 
 ```markdown
-## [1.1.3] - 2026-04-30      ← date added automatically on every update
+## [1.1.3] - 2026-04-30      ← date added automatically when version differs from main
+## [calver-released]         ← no date while still accumulating
 ```
 
 The date refreshes on each push so it stays current. The validation check ensures a dated heading is present before merge.
 
 ## Usage
 
-Add two workflow files to your repo:
+See [`/examples`](./examples) for ready-to-use workflow setups:
 
-### 1. Release workflow
+| Example | What's included | Best for |
+|---------|----------------|----------|
+| [`minimal`](./examples/minimal) | Single release workflow on push to `main` | Projects that always auto-release |
+| [`minimal-with-validation`](./examples/minimal-with-validation) | Release + validation workflows | **Most projects** — the general-purpose setup. Also used by this repo itself |
+| [`basic-npm-package`](./examples/basic-npm-package) | Release + npm publish + validation workflows | npm packages with curated changelogs |
 
-```yaml
-# .github/workflows/release.yml
-name: Auto Release
-
-on:
-  push:
-    branches: [main, 'release/*']
-  pull_request:
-    types: [ready_for_review]
-    branches: [main]
-
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.release.outputs.version }}
-      has_changes: ${{ steps.release.outputs.has_changes }}
-    steps:
-      - id: release
-        uses: cad0p/semver-calver-release/release@v1
-        with:
-          skip_release: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
-          ref: ${{ github.head_ref || github.ref }}
-
-  publish:
-    needs: release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.release.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: cad0p/semver-calver-release/npm-publish@v1
-        with:
-          tag: v${{ needs.release.outputs.version }}
-```
-
-### 2. Validation workflow
-
-```yaml
-# .github/workflows/validate-package-version.yml
-name: Validate Package Version
-
-on:
-  pull_request:
-    branches: [main]
-
-permissions:
-  contents: read
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: cad0p/semver-calver-release/validate-package-version@v1
-```
+Copy the workflows from the example that fits your project and commit them to `.github/workflows/`.
 
 ## How it works
 
@@ -148,11 +93,11 @@ You can:
 
 ## Customizing changelog format
 
-The release action uses [git-cliff](https://git-cliff.org) to generate changelogs. It looks for a `cliff.toml` in your repo root and falls back to a sensible default shipped with the action.
+The release action uses [git-cliff](https://git-cliff.org) to generate changelogs. It looks for a `cliff.toml` in your repo root and falls back to a [sensible default](release/cliff.toml) shipped with the action.
 
 To customize:
 
-1. Run `git-cliff --init` in your repo to generate a starting config
+1. Start from the [default config](release/cliff.toml) or run `git-cliff --init` to generate one
 2. Commit `cliff.toml` to your repo root
 3. The action will use your config instead of the default
 
