@@ -84,7 +84,7 @@ After the first calver release following a base release, a branch like `release/
 You can:
 - View it to see all changes since the base release
 - Edit it to curate the changelog before a base release
-- Bump `package.json` — the PR title auto-updates to match
+- Bump `package.json` — the PR title auto-updates from `chore(release): from vX.Y.Z (TBD)` to `chore(release): vX.Y.Z`
 - Merge it when ready to ship the next base version
 
 **Validation not appearing?** Bot commits (like `docs(changelog): ...`) do not trigger GitHub Actions workflows. If the `validate` status check is stuck on "Expected", click **"Update branch"** on the PR to create a merge commit that triggers validation.
