@@ -170,7 +170,7 @@ runs:
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "0.0.0")
         MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
         BASE_TAG="v$MAIN_BASE"
-        BRANCH="release/$BASE_TAG"
+        BRANCH="release/from-$BASE_TAG"
         RANGE_START="$BASE_TAG"
         IS_CALVER=$(echo "$VERSION" | grep -q '-' && echo "true" || echo "false")
 
