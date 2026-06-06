@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 - Rename release branch from release/vX.Y.Z to release/from-vX.Y.Z ([#149](https://github.com/cad0p/semver-calver-release/pull/149))
 
+- PR title is 'from vX.Y.Z (TBD)' until package.json is bumped ([#151](https://github.com/cad0p/semver-calver-release/pull/151))
+
 
 ### 🐛 Bug Fixes
 
