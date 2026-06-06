@@ -16,7 +16,7 @@ runs:
         BRANCH="${{ github.head_ref }}"
         
         # Only validate release/* branches
-        if ! echo "$BRANCH" | grep -q '^release/v'; then
+        if ! echo "$BRANCH" | grep -q '^release/from-v'; then
           echo "Not a release branch — skipping validation"
           exit 0
         fi

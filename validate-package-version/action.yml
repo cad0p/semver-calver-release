@@ -47,7 +47,7 @@ runs:
         fi
 
         # On release branches: format check only (version bump is allowed and expected)
-        if echo "$BRANCH" | grep -q '^release/v'; then
+        if echo "$BRANCH" | grep -q '^release/from-v'; then
           echo "Release branch — version format OK: $CURRENT_VERSION"
           exit 0
         fi
@@ -61,7 +61,7 @@ runs:
 
         if [ "$CURRENT_VERSION" != "$BASE_VERSION" ]; then
           echo "::error::package.json version changed from '$BASE_VERSION' to '$CURRENT_VERSION' on a non-release branch"
-          echo "::error::Version bumps must be done on a release/v* branch"
+          echo "::error::Version bumps must be done on a release/from-v* branch"
           exit 1
         fi
 

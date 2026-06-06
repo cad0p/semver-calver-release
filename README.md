@@ -17,12 +17,12 @@ Composite GitHub Actions for **hybrid SemVer + CalVer versioning** and npm publi
 
 ## Release Branch Workflow
 
-The action maintains a **draft release PR** on a branch named after the **last released** base version (e.g. `release/v1.1.2`). This branch accumulates all changes since that release:
+The action maintains a **draft release PR** on a branch named after the **last released** base version (e.g. `release/from-v1.1.2`). This branch accumulates all changes since that release:
 
 | Event | What happens |
 |-------|-------------|
 | **Push to `main`** | Auto calver release + updates draft PR with new commits |
-| **Push to `release/v1.1.2`** | Updates draft PR only (no tag/release) — for curating the next base release |
+| **Push to `release/from-v1.1.2`** | Updates draft PR only (no tag/release) — for curating the next base release |
 | **Merge draft PR to `main`** | Triggers base release with curated CHANGELOG |
 
 ### Draft headings include the current date
@@ -65,7 +65,7 @@ Every push to `main` that changes code triggers:
 
 When you want to bump the base version (e.g. `1.1.2` → `1.1.3`):
 
-1. **Find the draft PR** on `release/v1.1.2` — it contains accumulated changelogs since `v1.1.2` was released
+1. **Find the draft PR** on `release/from-v1.1.2` — it contains accumulated changelogs since `v1.1.2` was released
 2. **Edit CHANGELOG.md** on that branch to add your preamble/notes between the `<!-- USER-EDITABLE SECTION -->` markers
 3. **Bump `package.json`** version to `1.1.3`
 4. **Merge the PR** — the `validate-release-pr` check ensures the version is bumped, the date is present, and no unexpected files are present
@@ -74,7 +74,7 @@ When you want to bump the base version (e.g. `1.1.2` → `1.1.3`):
 
 ### Draft changelog PRs
 
-After the first calver release following a base release, a branch like `release/v1.1.2` is maintained with accumulated changelogs.
+After the first calver release following a base release, a branch like `release/from-v1.1.2` is maintained with accumulated changelogs.
 
 **How it works:**
 - The draft heading uses the current `package.json` version (e.g. `## [1.1.3]`) when bumped, or `[calver-released]` when still accumulating
@@ -115,7 +115,7 @@ Prevents accidental `package.json` version changes on feature branches and valid
 
 **Behavior:**
 - **Feature branches** (`feature/*`, `fix/*`, etc.): Errors if `package.json` version differs from `main`
-- **Release branches** (`release/v*`): Validates format only (version bump is expected)
+- **Release branches** (`release/from-v*`): Validates format only (version bump is expected)
 
 **Inputs:**
 
