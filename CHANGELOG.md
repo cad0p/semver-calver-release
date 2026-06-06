@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [calver-released]
+
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. -->
+<!-- USER-EDITABLE SECTION END -->
+
+
+### 🚀 Features
+
+- Rename release branch from release/vX.Y.Z to release/from-vX.Y.Z ([#149](https://github.com/cad0p/semver-calver-release/pull/149))
+
+
+### 🐛 Bug Fixes
+
+- Discard stale user sections from finalized release headings ([#144](https://github.com/cad0p/semver-calver-release/pull/144))
+
+
+### 🚜 Refactor
+
+- Remove redundant ready_for_review trigger, simplify workflow ([#141](https://github.com/cad0p/semver-calver-release/pull/141))
+
+
 ## [1.1.3]
 
 <!-- USER-EDITABLE SECTION START -->
