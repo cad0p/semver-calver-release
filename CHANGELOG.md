@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.2] - 2026-05-01
+## [1.1.2] - 2026-06-06
 
 <!-- USER-EDITABLE SECTION START -->
 <!-- Add your curated release notes here. -->
