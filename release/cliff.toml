@@ -3,12 +3,13 @@ header = ""
 trim = true
 
 body = """
-{% for group, commits in commits | group_by(attribute="group") %}
+{%- for group, commits in commits | group_by(attribute="group") -%}
 ### {{ group | striptags | trim | upper_first }}
 {% for commit in commits %}
 - {% if commit.scope %}*({{ commit.scope }})* {% endif %}{{ commit.message | upper_first }}
-{% endfor %}
-{% endfor %}
+{%- endfor %}
+
+{% endfor -%}
 """
 
 [git]
