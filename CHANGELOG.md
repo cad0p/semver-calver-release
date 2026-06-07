@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [calver-released]
+## [1.2.0] - 2026-06-07
 
 <!-- USER-EDITABLE SECTION START -->
 Renaming release branch and PR name QoL improvements.
