@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-06-07
+
+<!-- USER-EDITABLE SECTION START -->
+Renaming release branch and PR name QoL improvements.
+<!-- USER-EDITABLE SECTION END -->
+
+### 🚀 Features
+
+- Rename release branch from release/vX.Y.Z to release/from-vX.Y.Z ([#149](https://github.com/cad0p/semver-calver-release/pull/149))
+- PR title is 'from vX.Y.Z (TBD)' until package.json is bumped ([#151](https://github.com/cad0p/semver-calver-release/pull/151))
+
+### 🐛 Bug Fixes
+
+- Discard stale user sections from finalized release headings ([#144](https://github.com/cad0p/semver-calver-release/pull/144))
+- *(changelog)* Remove blank lines between bullets, reduce to one blank line between sections ([#152](https://github.com/cad0p/semver-calver-release/pull/152))
+
+### 🚜 Refactor
+
+- Remove redundant ready_for_review trigger, simplify workflow ([#141](https://github.com/cad0p/semver-calver-release/pull/141))
+
+
 ## [1.1.3]
 
 <!-- USER-EDITABLE SECTION START -->
