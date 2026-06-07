@@ -215,6 +215,7 @@ runs:
         # (the release branch may have been bumped ahead by the user)
         MAIN_VERSION=$(git show origin/main:package.json 2>/dev/null | jq -r '.version' || echo "$BASE_VERSION")
         MAIN_BASE=$(echo "$MAIN_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
+        CURRENT_BASE=$(echo "$CURRENT_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
 
         # Draft headings always include current UTC date when version is bumped.
         # This ensures the date stays fresh if commits are pushed days later.
@@ -375,10 +376,19 @@ runs:
           fi
         fi
 
-        # Update PR title to match current package.json version (from branch)
+        # Compute PR title based on whether the user has bumped package.json:
+        # - "from vX.Y.Z (TBD)" while the base version is unchanged (still curating)
+        # - "vX.Y.Z" once the user has bumped package.json to the next base version
+        if [ "$CURRENT_BASE" != "$MAIN_BASE" ]; then
+          PR_TITLE="chore(release): v$CURRENT_VERSION"
+        else
+          PR_TITLE="chore(release): from v$MAIN_BASE (TBD)"
+        fi
+
+        # Update PR title to match current state
         PR_NUMBER=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
         if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
-          gh pr edit "$PR_NUMBER" --title "chore(release): v$CURRENT_VERSION" 2>/dev/null || true
+          gh pr edit "$PR_NUMBER" --title "$PR_TITLE" 2>/dev/null || true
         fi
 
         # Create draft PR if it doesn't exist
@@ -388,7 +398,7 @@ runs:
           if ! gh pr create \
             --head "$BRANCH" \
             --base main \
-            --title "chore(release): v$CURRENT_VERSION" \
+            --title "$PR_TITLE" \
             --body "$PR_BODY" \
             --draft 2>/tmp/pr_error; then
             ERROR=$(cat /tmp/pr_error)
