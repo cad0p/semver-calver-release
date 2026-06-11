@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [calver-released]
+## [1.2.1] - 2026-06-11
 
 <!-- USER-EDITABLE SECTION START -->
 Tightens `validate-package-version` to also reject any `CHANGELOG.md` edits on non-`release/from-v*` branches, preventing premature release headings from contaminating `main` and corrupting the next draft release PR.
