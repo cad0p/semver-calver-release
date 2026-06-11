@@ -107,15 +107,17 @@ Your custom config is applied **before** PR link injection, so you don't need to
 
 ### `validate-package-version`
 
-Prevents accidental `package.json` version changes on feature branches and validates format on release branches.
+Guards `main` from accidental release artifacts on normal PRs, and validates version format on release branches.
 
 ```yaml
 - uses: cad0p/semver-calver-release/validate-package-version@v1
 ```
 
 **Behavior:**
-- **Feature branches** (`feature/*`, `fix/*`, etc.): Errors if `package.json` version differs from `main`
-- **Release branches** (`release/from-v*`): Validates format only (version bump is expected)
+- **Feature branches** (`feature/*`, `fix/*`, etc.):
+  - Errors if `package.json` version differs from `main`
+  - Errors if `CHANGELOG.md` is modified — changelog edits (including typo fixes for historical entries) must be made on the `release/from-v*` branch / draft release PR. This prevents normal PRs from landing premature release headings or otherwise corrupting `main`'s changelog, which the release action uses as the source of truth for finalized sections.
+- **Release branches** (`release/from-v*`): Validates `package.json` version format only (version bump and changelog edits are expected)
 
 **Inputs:**
 

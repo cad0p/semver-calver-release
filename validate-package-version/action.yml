@@ -1,5 +1,5 @@
 name: 'Validate Package Version'
-description: 'Prevent accidental package.json version changes on feature branches; validate format on release branches'
+description: 'On normal PRs, reject package.json version changes and any CHANGELOG.md edits; on release/from-v* branches, validate version format only'
 
 inputs:
   base-branch:
@@ -66,3 +66,14 @@ runs:
         fi
 
         echo "Version unchanged from $BASE_BRANCH: $CURRENT_VERSION"
+
+        # On non-release branches: CHANGELOG.md must not change.
+        # Changelog edits (including historical typo fixes) belong on the
+        # release/from-v* branch / draft release PR. This prevents normal PRs
+        # from contaminating main's CHANGELOG.md, which the release action
+        # treats as the source of truth for finalized sections.
+        if git diff --name-only "origin/$BASE_BRANCH...HEAD" -- CHANGELOG.md | grep -qx 'CHANGELOG.md'; then
+          echo "::error::CHANGELOG.md must not be modified on non-release branches"
+          echo "::error::Edit CHANGELOG.md on the release/from-v* branch / draft release PR instead"
+          exit 1
+        fi
