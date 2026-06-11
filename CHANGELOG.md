@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [calver-released]
+
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. -->
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- *(validate-package-version)* Block CHANGELOG.md edits on normal PRs ([#154](https://github.com/cad0p/semver-calver-release/pull/154))
+
+
 ## [1.2.0] - 2026-06-07
 
 <!-- USER-EDITABLE SECTION START -->
