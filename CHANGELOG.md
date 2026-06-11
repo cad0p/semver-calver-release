@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [calver-released]
 
 <!-- USER-EDITABLE SECTION START -->
-<!-- Add your curated release notes here. -->
+Tightens `validate-package-version` to also reject any `CHANGELOG.md` edits on non-`release/from-v*` branches, preventing premature release headings from contaminating `main` and corrupting the next draft release PR.
 <!-- USER-EDITABLE SECTION END -->
 
 ### 🐛 Bug Fixes
