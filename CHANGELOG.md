@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-06-11
+
+<!-- USER-EDITABLE SECTION START -->
+Tightens `validate-package-version` to also reject any `CHANGELOG.md` edits on non-`release/from-v*` branches, preventing premature release headings from contaminating `main` and corrupting the next draft release PR.
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- *(validate-package-version)* Block CHANGELOG.md edits on normal PRs ([#154](https://github.com/cad0p/semver-calver-release/pull/154))
+
+
 ## [1.2.0] - 2026-06-07
 
 <!-- USER-EDITABLE SECTION START -->
