@@ -60,8 +60,23 @@ runs:
         fi
 
         if [ "$CURRENT_VERSION" != "$BASE_VERSION" ]; then
-          echo "::error::package.json version changed from '$BASE_VERSION' to '$CURRENT_VERSION' on a non-release branch"
-          echo "::error::Version bumps must be done on a release/from-v* branch"
+          {
+            echo "## ❌ package.json version changed on a non-release branch"
+            echo ""
+            echo "**Rule:** \`package.json\` \`version\` may only change on \`release/from-v*\` branches (found: \`$BASE_VERSION\` → \`$CURRENT_VERSION\`). Version bumps are how the release action detects a curated base release; a bump on a feature branch corrupts that signal."
+            echo ""
+            echo "**Fix this PR:**"
+            echo '```bash'
+            echo "git checkout origin/$BASE_BRANCH -- package.json"
+            echo "git commit -m \"chore: revert version bump (releases bump version on the release PR)\""
+            echo "git push"
+            echo '```'
+            echo ""
+            echo "**To cut a release:** find the draft PR on the \`release/from-v$BASE_VERSION\` branch → curate CHANGELOG.md (between the \`USER-EDITABLE SECTION\` markers) → bump \`package.json\` there → merge. Merging tags the base release and updates the floating tags."
+            echo ""
+            echo "Docs: https://github.com/cad0p/semver-calver-release#base-releases-manual-curated"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::error::package.json version changed from '$BASE_VERSION' to '$CURRENT_VERSION' on a non-release branch — fix runbook above and in the job summary"
           exit 1
         fi
 
@@ -73,7 +88,23 @@ runs:
         # from contaminating main's CHANGELOG.md, which the release action
         # treats as the source of truth for finalized sections.
         if git diff --name-only "origin/$BASE_BRANCH...HEAD" -- CHANGELOG.md | grep -qx 'CHANGELOG.md'; then
-          echo "::error::CHANGELOG.md must not be modified on non-release branches"
-          echo "::error::Edit CHANGELOG.md on the release/from-v* branch / draft release PR instead"
+          {
+            echo "## ❌ CHANGELOG.md modified on a non-release branch"
+            echo ""
+            echo "**Rule:** Changelog edits — including typo fixes to historical entries — belong on the \`release/from-v*\` draft release PR. The release action treats main's CHANGELOG.md as the source of truth for finalized sections, so a normal PR landing changelog edits (or premature release headings) corrupts the next release's notes."
+            echo ""
+            echo "**Fix this PR:**"
+            echo '```bash'
+            echo "git checkout origin/$BASE_BRANCH -- CHANGELOG.md"
+            echo "git commit -m \"chore: revert CHANGELOG edit (curation happens on the release PR)\""
+            echo "git push"
+            echo '```'
+            echo "Carry your changelog text over to the draft release PR instead of losing it."
+            echo ""
+            echo "**To cut a release:** find the draft PR on the \`release/from-v$BASE_VERSION\` branch → paste your notes into CHANGELOG.md between the \`USER-EDITABLE SECTION\` markers → bump \`package.json\` → mark ready → merge. The heading date and PR title are set automatically. If checks sit at \`action_required\` after the bot commit, approve the workflow runs (\`gh api -X POST /repos/{owner}/{repo}/actions/runs/<id>/approve\`)."
+            echo ""
+            echo "Docs: https://github.com/cad0p/semver-calver-release#base-releases-manual-curated"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::error::CHANGELOG.md must not be modified on non-release branches — fix runbook above and in the job summary"
           exit 1
         fi
