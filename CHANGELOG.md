@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [calver-released]
+## [1.2.2] - 2026-07-31
 
 <!-- USER-EDITABLE SECTION START -->
 Validation failures now teach the release process at the moment they bite:
