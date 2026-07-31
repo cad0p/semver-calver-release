@@ -31,8 +31,10 @@ runs:
         echo "Current version: $CURRENT_VERSION"
         
         if [ "$CURRENT_VERSION" = "$MAIN_BASE" ]; then
-          echo "::error::package.json version ($CURRENT_VERSION) must be bumped from the last released base version ($MAIN_BASE)"
-          echo "::error::Edit package.json to set the next release version before merging"
+          sed -e "s|{{BRANCH}}|$BRANCH|g" \
+              -e "s|{{MAIN_BASE}}|$MAIN_BASE|g" \
+              "${{ github.action_path }}/errors/no-version-bump.md" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "::error::package.json version ($CURRENT_VERSION) must be bumped from the last released base version ($MAIN_BASE) — fix runbook above and in the job summary"
           exit 1
         fi
         
@@ -53,8 +55,17 @@ runs:
         # Prevent code changes from being hidden in release PRs
         UNEXPECTED=$(git diff --name-only origin/main...HEAD | grep -v -E '^(package\.json|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|CHANGELOG\.md)$' || true)
         if [ -n "$UNEXPECTED" ]; then
-          echo "::error::Release PR contains unexpected files: $UNEXPECTED"
-          echo "::error::Only package.json, lockfiles, and CHANGELOG.md should change on release branches"
+          # sed replacement strings can't safely carry newlines, so inject
+          # the multi-line file list with sed's `r` command from a temp file
+          # (portable across GNU and BSD sed).
+          UNEXPECTED_TMP=$(mktemp)
+          printf '%s\n' "$UNEXPECTED" > "$UNEXPECTED_TMP"
+          sed -e "/{{UNEXPECTED_FILES}}/r $UNEXPECTED_TMP" \
+              -e "/{{UNEXPECTED_FILES}}/d" \
+              -e "s|{{BRANCH}}|$BRANCH|g" \
+              "${{ github.action_path }}/errors/unexpected-files.md" | tee -a "$GITHUB_STEP_SUMMARY"
+          rm -f "$UNEXPECTED_TMP"
+          echo "::error::Release PR contains unexpected files: $UNEXPECTED — fix runbook above and in the job summary"
           exit 1
         fi
         

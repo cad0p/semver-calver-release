@@ -117,6 +117,7 @@ Guards `main` from accidental release artifacts on normal PRs, and validates ver
 - **Feature branches** (`feature/*`, `fix/*`, etc.):
   - Errors if `package.json` version differs from `main`
   - Errors if `CHANGELOG.md` is modified — changelog edits (including typo fixes for historical entries) must be made on the `release/from-v*` branch / draft release PR. This prevents normal PRs from landing premature release headings or otherwise corrupting `main`'s changelog, which the release action uses as the source of truth for finalized sections.
+- **Self-teaching failures:** every rule violation prints a full remediation runbook (the rule and why it exists, the exact `git` commands to fix the PR, and the release-flow steps) to both the job log and the GitHub step summary — the check teaches the process at the moment it bites, so consumers don't need to read these docs preemptively. Runbooks live as markdown templates under `validate-package-version/errors/` and `validate-release-pr/errors/` with `{{PLACEHOLDER}}` substitution, so wording changes don't require touching the action YAML.
 - **Release branches** (`release/from-v*`): Validates `package.json` version format only (version bump and changelog edits are expected)
 
 **Inputs:**
