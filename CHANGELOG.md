@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [calver-released]
 
 <!-- USER-EDITABLE SECTION START -->
-<!-- Add your curated release notes here. -->
+Validation failures now teach the release process at the moment they bite:
+
+- Rule violations in `validate-package-version` and `validate-release-pr` print a full remediation runbook — the rule and why, exact fix commands, release-flow steps — to the job log and the GitHub step summary.
+- Runbooks live as markdown templates under each action's `errors/` directory with `{{PLACEHOLDER}}` substitution, so wording changes don't touch the action YAML.
+- Changelog guidance routes user-facing notes into PR bodies: release curation aggregates merged PR bodies to draft the highlights section.
 <!-- USER-EDITABLE SECTION END -->
 
 ### 🚀 Features
