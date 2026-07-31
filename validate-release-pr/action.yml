@@ -31,23 +31,9 @@ runs:
         echo "Current version: $CURRENT_VERSION"
         
         if [ "$CURRENT_VERSION" = "$MAIN_BASE" ]; then
-          {
-            echo "## ❌ Release PR without a version bump"
-            echo ""
-            echo "**Rule:** A release PR must bump \`package.json\` \`version\` above the last released base version ($MAIN_BASE). The bump is what turns the accumulating draft into a curated base release."
-            echo ""
-            echo "**Fix this PR:**"
-            echo '```bash'
-            echo "git checkout $BRANCH"
-            echo "# edit package.json: bump \"version\" above $MAIN_BASE (e.g. next patch)"
-            echo "# curate CHANGELOG.md between the USER-EDITABLE SECTION markers while you're here"
-            echo "git commit -m \"chore(release): v<version> — curate changelog and bump version\""
-            echo "git push"
-            echo '```'
-            echo "The PR title and the CHANGELOG heading date update automatically on push. Checks stuck at \`action_required\` after the bot commit? Approve the runs: \`gh api -X POST /repos/{owner}/{repo}/actions/runs/<id>/approve\`."
-            echo ""
-            echo "Docs: https://github.com/cad0p/semver-calver-release#base-releases-manual-curated"
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+          sed -e "s|{{BRANCH}}|$BRANCH|g" \
+              -e "s|{{MAIN_BASE}}|$MAIN_BASE|g" \
+              "${{ github.action_path }}/errors/no-version-bump.md" | tee -a "$GITHUB_STEP_SUMMARY"
           echo "::error::package.json version ($CURRENT_VERSION) must be bumped from the last released base version ($MAIN_BASE) — fix runbook above and in the job summary"
           exit 1
         fi
@@ -69,24 +55,16 @@ runs:
         # Prevent code changes from being hidden in release PRs
         UNEXPECTED=$(git diff --name-only origin/main...HEAD | grep -v -E '^(package\.json|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|CHANGELOG\.md)$' || true)
         if [ -n "$UNEXPECTED" ]; then
-          {
-            echo "## ❌ Release PR contains unexpected files"
-            echo ""
-            echo "**Rule:** Release branches may only change \`package.json\`, lockfiles, and \`CHANGELOG.md\` — a release PR is a curated version bump, not a vehicle for code changes. Found:"
-            echo '```'
-            echo "$UNEXPECTED"
-            echo '```'
-            echo ""
-            echo "**Fix this PR:** move those changes to their own feature branch / PR and merge them to main first; the release branch picks them up automatically when the action rebuilds it from \`origin/main\`."
-            echo '```bash'
-            echo "git checkout $BRANCH"
-            echo "git checkout origin/main -- <file>   # per unexpected file, to revert it here"
-            echo "git commit -m \"chore: drop non-release files (moved to a feature PR)\""
-            echo "git push"
-            echo '```'
-            echo ""
-            echo "Docs: https://github.com/cad0p/semver-calver-release#draft-changelog-prs"
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+          # sed replacement strings can't safely carry newlines, so inject
+          # the multi-line file list with sed's `r` command from a temp file
+          # (portable across GNU and BSD sed).
+          UNEXPECTED_TMP=$(mktemp)
+          printf '%s\n' "$UNEXPECTED" > "$UNEXPECTED_TMP"
+          sed -e "/{{UNEXPECTED_FILES}}/r $UNEXPECTED_TMP" \
+              -e "/{{UNEXPECTED_FILES}}/d" \
+              -e "s|{{BRANCH}}|$BRANCH|g" \
+              "${{ github.action_path }}/errors/unexpected-files.md" | tee -a "$GITHUB_STEP_SUMMARY"
+          rm -f "$UNEXPECTED_TMP"
           echo "::error::Release PR contains unexpected files: $UNEXPECTED — fix runbook above and in the job summary"
           exit 1
         fi
