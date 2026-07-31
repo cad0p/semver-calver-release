@@ -6,7 +6,11 @@
 ```bash
 git checkout {{BRANCH}}
 # edit package.json: bump "version" above {{MAIN_BASE}} (e.g. next patch)
-# curate CHANGELOG.md between the USER-EDITABLE SECTION markers while you're here
+# curate CHANGELOG.md between the USER-EDITABLE SECTION markers:
+# look at the PRs (and their descriptions) referenced in the auto-created
+# release notes below, and summarize the changes since the last release in
+# a few bullet points — only as many as required, as concise as possible
+# while retaining the most important information, readable "at a glance"
 git commit -m "chore(release): v<version> — curate changelog and bump version"
 git push
 ```
