@@ -197,8 +197,30 @@ runs:
         git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
         CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
 
+        # Detect stale branch: if the first heading is a finalized release, reset to main
+        BRANCH_RESET=false
+        if git show "$PARENT_SHA:CHANGELOG.md" >/tmp/branch_changelog.md 2>/dev/null; then
+          FIRST_HEADING_VERSION=$(awk '/^## \[/{gsub(/^## \[|\].*$/, ""); print; exit}' /tmp/branch_changelog.md)
+          if [ -n "$FIRST_HEADING_VERSION" ] && [ "$FIRST_HEADING_VERSION" != "calver-released" ]; then
+            if git tag -l "v$FIRST_HEADING_VERSION" | grep -q .; then
+              echo "Stale branch detected (first heading v$FIRST_HEADING_VERSION already released) — resetting to main"
+              PARENT_SHA=$MAIN_SHA
+              BRANCH_RESET=true
+              git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
+              CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
+            elif [ "$FIRST_HEADING_VERSION" != "$CURRENT_VERSION" ]; then
+              echo "Stale branch detected (heading $FIRST_HEADING_VERSION mismatches package.json $CURRENT_VERSION) — resetting to main"
+              PARENT_SHA=$MAIN_SHA
+              BRANCH_RESET=true
+              git show "$PARENT_SHA:package.json" > /tmp/branch_package.json 2>/dev/null || cp package.json /tmp/branch_package.json
+              CURRENT_VERSION=$(jq -r '.version' /tmp/branch_package.json)
+            fi
+          fi
+        fi
+
         # Re-read branch tip in case it moved while we were working
-        if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+        # Skip if we intentionally reset to main (stale branch)
+        if [ "$BRANCH_RESET" != "true" ] && git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
           LATEST_PARENT_SHA=$(git rev-parse "origin/$BRANCH")
           if [ "$LATEST_PARENT_SHA" != "$PARENT_SHA" ]; then
             PARENT_SHA="$LATEST_PARENT_SHA"
