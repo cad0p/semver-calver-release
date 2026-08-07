@@ -48,6 +48,8 @@ See [`/examples`](./examples) for ready-to-use workflow setups:
 
 Copy the workflows from the example that fits your project and commit them to `.github/workflows/`.
 
+> **Branch protection:** enable branch protection on `main` (Settings → Branches → Branch protection rules) and add the required status checks `validate-release-pr` and `validate-package-version` (the job names in the example workflows above). Without this, a failing validation does **not** block merges — a release PR can be merged without the required `package.json` bump and the release silently never happens.
+
 ## How it works
 
 ### Calver releases (automatic)
@@ -87,7 +89,7 @@ You can:
 - Bump `package.json` — the PR title auto-updates from `chore(release): from vX.Y.Z (TBD)` to `chore(release): vX.Y.Z`
 - Merge it when ready to ship the next base version
 
-**Validation not appearing?** Bot commits (like `docs(changelog): ...`) do not trigger GitHub Actions workflows. If the `validate` status check is stuck on "Expected", click **"Update branch"** on the PR to create a merge commit that triggers validation.
+**Validation not appearing?** Bot commits (like `docs(changelog): ...`) do not trigger GitHub Actions workflows. If the `validate-release-pr` status check is stuck on "Expected", click **"Update branch"** on the PR to create a merge commit that triggers validation.
 
 **Note:** Auto-creating PRs requires enabling "Allow GitHub Actions to create and approve pull requests" in your repo settings (Settings → Actions → General). Without this, the branch is still maintained automatically — you'll just need to create the PR manually.
 
@@ -186,13 +188,13 @@ permissions:
   pull-requests: write
 
 jobs:
-  validate:
+  validate-release-pr:
     runs-on: ubuntu-latest
     steps:
       - uses: cad0p/semver-calver-release/validate-release-pr@v1
 ```
 
-To **block merges** until validation passes, add `validate` as a required status check in your branch protection rules.
+To **block merges** until validation passes, add `validate-release-pr` (and `validate-package-version`, if you use that workflow too) as required status checks in your branch protection rules.
 
 
 
