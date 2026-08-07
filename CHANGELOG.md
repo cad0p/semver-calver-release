@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [calver-released]
+
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. -->
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- Distinct validate job names + document branch protection ([#158](https://github.com/cad0p/semver-calver-release/pull/158))
+
+
 ## [1.2.2] - 2026-07-31
 
 <!-- USER-EDITABLE SECTION START -->
