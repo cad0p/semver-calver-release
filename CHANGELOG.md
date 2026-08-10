@@ -2,11 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [calver-released]
+## [1.2.3] - 2026-08-10
 
-<!-- USER-EDITABLE SECTION START -->
-<!-- Add your curated release notes here. -->
-<!-- USER-EDITABLE SECTION END -->
+### 🐛 Bug Fixes
+
+- `npm-publish`: install pnpm before `npm install` so consumers with a pnpm-based `prepare` script (e.g. `\"prepare\": \"pnpm build\"`) don't fail the publish job with `pnpm: not found`. (PR #160)
 
 ### 🐛 Bug Fixes
 
