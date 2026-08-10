@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Distinct validate job names + document branch protection ([#158](https://github.com/cad0p/semver-calver-release/pull/158))
+- *(npm-publish)* Install pnpm before npm install (prepare scripts) ([#160](https://github.com/cad0p/semver-calver-release/pull/160))
 
 
 ## [1.2.2] - 2026-07-31
