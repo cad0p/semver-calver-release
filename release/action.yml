@@ -74,7 +74,10 @@ runs:
         echo "Computed version: $VERSION"
 
     - name: Install git-cliff
-      if: steps.changes.outputs.has_changes == 'true'
+      # Also install on release-branch runs: the draft-PR step below always
+      # calls git-cliff when skip_release is true, even with has_changes=false
+      # (e.g. a changelog-only push after a calver tag on main).
+      if: steps.changes.outputs.has_changes == 'true' || inputs.skip_release == 'true'
       shell: bash
       run: npm install -g git-cliff@2
 
