@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [calver-released]
 
 <!-- USER-EDITABLE SECTION START -->
-<!-- Add your curated release notes here. -->
+Fixed the Auto Release crash on release-branch pushes with changelog-only diffs: `Install git-cliff` now also runs when `skip_release` is true (mirroring the draft-PR step's gate), so a push after a calver tag on main no longer fails with `git-cliff: command not found` (fixes #161).
 <!-- USER-EDITABLE SECTION END -->
 
 ### 🐛 Bug Fixes
