@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [calver-released]
+
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. -->
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- Install git-cliff on skip_release runs even when has_changes is false ([#162](https://github.com/cad0p/semver-calver-release/pull/162))
+
+
 ## [1.2.3] - 2026-08-10
 
 <!-- USER-EDITABLE SECTION START -->
