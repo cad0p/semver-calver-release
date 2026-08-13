@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - 2026-08-13
+
+<!-- USER-EDITABLE SECTION START -->
+Fixed the Auto Release crash on release-branch pushes with changelog-only diffs: `Install git-cliff` now also runs when `skip_release` is true (mirroring the draft-PR step's gate), so a push after a calver tag on main no longer fails with `git-cliff: command not found` (fixes #161).
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- Install git-cliff on skip_release runs even when has_changes is false ([#162](https://github.com/cad0p/semver-calver-release/pull/162))
+
+
 ## [1.2.3] - 2026-08-10
 
 <!-- USER-EDITABLE SECTION START -->
