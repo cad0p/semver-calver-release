@@ -139,9 +139,29 @@ runs:
           git push origin "v$MAJOR_MINOR" --force
         fi
 
-        # Determine release notes source
+        # Determine release notes source:
+        # - base releases: the released version's section from CHANGELOG.md
+        #   (curated USER-EDITABLE highlights + structured git-cliff groups),
+        #   falling back to per-release git-cliff notes if the section is missing
+        # - calver releases: per-release git-cliff notes
         if [ -f CHANGELOG.md ] && [ "$IS_CALVER" != "true" ]; then
-          NOTES_FILE="CHANGELOG.md"
+          awk -v v="$VERSION" '
+            /^## \[/ {
+              tok = $0
+              sub(/^## \[/, "", tok)
+              sub(/\] .*/, "", tok)
+              sub(/\]/, "", tok)
+              if (tok == v) { print; found = 1; next }
+              else if (found) exit
+            }
+            found { print }
+          ' CHANGELOG.md > /tmp/release_section.md
+          if [ -s /tmp/release_section.md ]; then
+            NOTES_FILE="/tmp/release_section.md"
+          else
+            echo "::warning::No CHANGELOG.md section found for v$VERSION — using git-cliff notes"
+            NOTES_FILE="/tmp/notes.md"
+          fi
         else
           NOTES_FILE="/tmp/notes.md"
         fi
