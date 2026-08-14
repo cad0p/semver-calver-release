@@ -159,7 +159,7 @@ Computes the next hybrid version, creates a git tag, publishes a GitHub release 
 
 ### `npm-publish`
 
-Publishes to npm with **smart skip** — if the version already exists, the action exits cleanly instead of failing. Uses `next` dist-tag for prerelease versions (containing `-`).
+Publishes to npm with **smart skip** — if the version already exists, the action exits cleanly instead of failing. Prerelease versions (containing `-`) are published with the `next` dist-tag; base releases are published to `latest` and also re-point `next` at the released version, making `next` a rolling pointer to the newest released version (stable or prerelease) that never lags `latest`.
 
 ```yaml
 - uses: cad0p/semver-calver-release/npm-publish@v1
