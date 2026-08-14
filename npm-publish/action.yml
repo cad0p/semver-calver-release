@@ -70,8 +70,9 @@ runs:
           npm publish --access public --tag next
         else
           npm publish --access public
+          MSG="Failed to re-point the 'next' dist-tag to $PACKAGE@$VERSION — @next consumers get stale code until the next release publish"
           if ! npm dist-tag add "$PACKAGE@$VERSION" next; then
-            echo "::warning::Failed to move 'next' dist-tag to $PACKAGE@$VERSION — @next consumers get stale code until the next calver publish"
-            echo "Failed to move 'next' dist-tag to $PACKAGE@$VERSION — @next consumers get stale code until the next calver publish" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::$MSG"
+            echo "$MSG" >> "$GITHUB_STEP_SUMMARY"
           fi
         fi
