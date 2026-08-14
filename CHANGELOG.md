@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [calver-released]
 
 <!-- USER-EDITABLE SECTION START -->
-<!-- Add your curated release notes here. -->
+npm-publish: base releases now also move the `next` dist-tag to the released version, so `pkg@next` never lags `latest` after a release (fixes #166).
 <!-- USER-EDITABLE SECTION END -->
 
 ### 🐛 Bug Fixes
