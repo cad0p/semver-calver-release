@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [calver-released]
+## [1.2.5] - 2026-08-14
 
 <!-- USER-EDITABLE SECTION START -->
 GitHub release bodies for base releases now contain only the released version's section instead of the entire CHANGELOG.md:
