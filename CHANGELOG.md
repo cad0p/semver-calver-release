@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 2026-08-14
+
+<!-- USER-EDITABLE SECTION START -->
+npm-publish: base releases now also move the `next` dist-tag to the released version, so `pkg@next` never lags `latest` after a release (fixes #166).
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- *(npm-publish)* Keep next dist-tag current on base releases ([#169](https://github.com/cad0p/semver-calver-release/pull/169))
+
+
 ## [1.2.6] - 2026-08-14
 
 <!-- USER-EDITABLE SECTION START -->
