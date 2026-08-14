@@ -343,11 +343,16 @@ runs:
         fi
 
         if [ "$SHOULD_COMMIT" != "false" ]; then
-          # Create blob for CHANGELOG.md
-          BLOB_SHA=$(gh api "repos/$REPO/git/blobs" \
-            -f content="$(base64 CHANGELOG.md | tr -d '\n')" \
-            -f encoding="base64" \
-            --jq '.sha')
+          # Create blob for CHANGELOG.md. The base64 payload is written to a JSON
+          # file and passed via --input: passing it as a CLI arg (-f content=...)
+          # exceeds the kernel's per-argument limit (MAX_ARG_STRLEN, 128KB) once
+          # CHANGELOG.md grows past ~96KB, failing with "Argument list too long".
+          {
+            printf '{"content":"'
+            base64 -w0 CHANGELOG.md
+            printf '","encoding":"base64"}\n'
+          } > /tmp/blob.json
+          BLOB_SHA=$(gh api "repos/$REPO/git/blobs" --input /tmp/blob.json --jq '.sha')
 
           # Create tree (base on parent commit to preserve other branch files)
           cat > /tmp/tree.json << EOF
