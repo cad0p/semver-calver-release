@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [calver-released]
+
+<!-- USER-EDITABLE SECTION START -->
+<!-- Add your curated release notes here. -->
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- *(npm-publish)* Keep next dist-tag current on base releases ([#169](https://github.com/cad0p/semver-calver-release/pull/169))
+
+
 ## [1.2.6] - 2026-08-14
 
 <!-- USER-EDITABLE SECTION START -->
