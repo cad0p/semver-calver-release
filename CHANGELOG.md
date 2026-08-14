@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2026-08-14
+
+<!-- USER-EDITABLE SECTION START -->
+GitHub release bodies for base releases now contain only the released version's section instead of the entire CHANGELOG.md:
+
+- v1.2.4's release body previously carried ~12KB covering every historical release; v1.2.5 and later ship just the curated highlights plus the structured commit groups for that version.
+- Missing or stale changelog sections fall back to per-release git-cliff notes with a workflow warning.
+- Calver prereleases were already per-release; unchanged.
+<!-- USER-EDITABLE SECTION END -->
+
+### 🐛 Bug Fixes
+
+- *(release)* Publish only the released version's section as release notes ([#164](https://github.com/cad0p/semver-calver-release/pull/164))
+
+
 ## [1.2.4] - 2026-08-13
 
 <!-- USER-EDITABLE SECTION START -->
